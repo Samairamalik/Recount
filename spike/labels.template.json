@@ -1,0 +1,36 @@
+{
+  "report": "spike/report.md",
+  "dataset": "spike/data/orders.parquet",
+  "claims": [
+    {
+      "id": "c1",
+      "type": "growth",
+      "span": "Revenue grew 12.4% over Q2",
+      "metric": "revenue",
+      "value": 12.4,
+      "unit": "percent",
+      "period": "2017-Q3",
+      "baseline_period": "2017-Q2",
+      "true_value": null,
+      "true_value_sql": "SELECT ... ",
+      "expected_verdict": "PASS | FAIL | UNVERIFIABLE",
+      "notes": ""
+    },
+    {
+      "id": "c2",
+      "type": "ranking",
+      "span": "São Paulo overtook Rio de Janeiro as our top state by order volume",
+      "metric": "order_volume",
+      "subject": "São Paulo",
+      "displaced": "Rio de Janeiro",
+      "rank": 1,
+      "group_by": "state",
+      "period": "2017-Q3",
+      "true_value": null,
+      "true_value_sql": "SELECT state, COUNT(*) ... GROUP BY state ORDER BY 2 DESC",
+      "expected_verdict": "PASS | FAIL | UNVERIFIABLE",
+      "notes": ""
+    }
+  ],
+  "dilemmas": []
+}

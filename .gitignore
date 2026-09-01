@@ -1,0 +1,15 @@
+.venv/
+__pycache__/
+*.pyc
+.env
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+.hypothesis/
+dist/
+*.parquet
+!examples/olist/*.parquet
+spike/data/
+out.html
+verdicts.json
+.DS_Store
