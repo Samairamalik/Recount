@@ -11,7 +11,15 @@ from pathlib import Path
 
 SRC = Path(__file__).resolve().parents[2] / "src" / "recount"
 
-LLM_MODULES = {"anthropic", "openai", "litellm", "google.genai", "google.generativeai", "cohere", "mistralai"}
+LLM_MODULES = {
+    "anthropic",
+    "openai",
+    "litellm",
+    "google.genai",
+    "google.generativeai",
+    "cohere",
+    "mistralai",
+}
 ALLOWED_LLM_ZONE = ("extract/", "bench/baseline_judge.py")
 
 
@@ -39,7 +47,9 @@ def test_wall_1_no_llm_imports_outside_extract() -> None:
             for n in names:
                 if any(n == m or n.startswith(m + ".") for m in LLM_MODULES):
                     offenders.append(f"{rel}: import {n}")
-    assert not offenders, "LLM client imported outside the probabilistic zone:\n" + "\n".join(offenders)
+    assert not offenders, "LLM client imported outside the probabilistic zone:\n" + "\n".join(
+        offenders
+    )
 
 
 _DYNAMIC_SQL = re.compile(r"""f["'](?:[^"']*\b(?:SELECT|FROM|WHERE|GROUP BY|ORDER BY)\b)""", re.I)
@@ -52,7 +62,11 @@ def test_wall_2_no_dynamic_sql_or_eval() -> None:
         rel = _rel(path)
         tree = ast.parse(text)
         for node in ast.walk(tree):
-            if isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id in {"eval", "exec"}:
+            if (
+                isinstance(node, ast.Call)
+                and isinstance(node.func, ast.Name)
+                and node.func.id in {"eval", "exec"}
+            ):
                 offenders.append(f"{rel}:{node.lineno}: {node.func.id}() call")
         for i, line in enumerate(text.splitlines(), 1):
             if _DYNAMIC_SQL.search(line):
