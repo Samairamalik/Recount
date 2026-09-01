@@ -73,5 +73,4 @@ Done: environment verified (uv 0.12.8, `uv sync --all-groups`, 3 tests passing i
 architecture walls); `spike/data/orders.parquet` built — 43,428 delivered 2017 orders,
 2017-01-05..2017-12-31, 27 states.
 Next: spike weekend — generate report → hand-label → config → spike script → G1.
-Open questions: §3 above ends mid-sentence ("every changed line should trace"); guide C1
-still says `anthropic`/`ANTHROPIC_API_KEY` while §0 and pyproject.toml say Gemini/`google-genai`.
+Open questions: docs/recount_claude_code_guide.md C1 still says anthropic/ANTHROPIC_API_KEY; CLAUDE.md §0 (Gemini) wins.
