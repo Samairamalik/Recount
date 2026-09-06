@@ -1,5 +1,7 @@
-"""Claim compilation (deterministic zone). Stage 2 ships the plan types only."""
+"""Claim compilation (deterministic zone): plan types, the period parser, the compiler."""
 
+from recount.compile.compiler import Abstain, compile_claim
+from recount.compile.periods import PeriodError, parse_period, unit_grain
 from recount.compile.plans import (
     AggregatePlan,
     ComparePlan,
@@ -17,6 +19,7 @@ from recount.compile.plans import (
 )
 
 __all__ = [
+    "Abstain",
     "AggregatePlan",
     "ComparePlan",
     "ComputePlan",
@@ -25,9 +28,13 @@ __all__ = [
     "GrowthPlan",
     "Measure",
     "Period",
+    "PeriodError",
     "PlanAdapter",
     "Polarity",
     "RankPlan",
     "SharePlan",
     "TimeKey",
+    "compile_claim",
+    "parse_period",
+    "unit_grain",
 ]

@@ -19,6 +19,7 @@ from typing import Any
 
 from recount.claims import Claim, Comparison, Growth, PointValue, Ranking, Share
 from recount.compile import (
+    Abstain,
     AggregatePlan,
     ComparePlan,
     ComputePlan,
@@ -28,7 +29,9 @@ from recount.compile import (
     RankPlan,
     SharePlan,
     TimeKey,
+    compile_claim,
 )
+from recount.config import SemanticConfig
 from recount.io import Dataset
 from recount.verify import policies
 from recount.verify.policies import PolicyResult, RankRow
@@ -298,3 +301,25 @@ def _apply_policy(claim: Claim, plan: ComputePlan, computed: Computed) -> Policy
         assert isinstance(plan, RankPlan)
         return policies.check_ranking(claim, plan.subject_key, computed.rows)
     return policies.check_share(claim, computed.values["share_pct"])
+
+
+def verify_claim(ds: Dataset, claim: Claim, cfg: SemanticConfig) -> Verdict:
+    """Compile, then verify. A compiler abstention becomes an UNVERIFIABLE verdict
+    that executed nothing (empty sql/params/row_counts)."""
+    plan = compile_claim(claim, cfg)
+    if isinstance(plan, Abstain):
+        claimed = float(claim.rank) if isinstance(claim, Ranking) else claim.value
+        return Verdict(
+            claim_id=claim.id,
+            verdict="UNVERIFIABLE",
+            claimed_value=claimed,
+            computed_value=None,
+            delta=None,
+            policy="abstain",
+            detail=plan.detail,
+            sql="",
+            params={},
+            row_counts={},
+            abstain_reason=plan.reason,
+        )
+    return verify(ds, claim, plan)
