@@ -68,19 +68,23 @@ When your changes create orphans:
 The test: every changed line should trace directly to the user's request.
 
 ## STATUS (update at the end of every session)
-Current stage: Stage 2 complete — deterministic verification engine
-Done: io/loader.py (CSV/Parquet → DuckDB `data`, schema validated against SemanticConfig, byte/row caps),
-compile/plans.py (frozen ComputePlan union: aggregate/growth/compare/rank/share; resolved columns,
-half-open Periods, EntityKey|TimeKey group keys), verify/engine.py (ONE constant SQL template per plan
-kind; identifiers from validated plans, keywords from Literals, all data as bound params),
-verify/policies.py (half_ulp in Decimal, per-metric ROUND in SQL, direction-before-magnitude for
-growth/comparison, RANK with ties, AVG NULL semantics documented), verify/verdict.py.
-AbstainReason gained NO_DATA (visible amendment, see learning-log). examples/olist/orders.parquet
-committed (CC BY-NC-SA, ATTRIBUTION.md). Goldens: 52/57 fixture claims verify to label incl. all 6
-corruptions for the right reason; Hypothesis: round-trip PASS, beyond-tolerance FAIL (1k cases),
-flipped-direction FAIL. Wall 3 added: src/ never imports test scaffolding (tests/verify/_fixture_plans.py).
-Next: Stage 3 — abstention decision table (doc first), compiler.py: alias resolution, period parsing
-(quarters/months/years/ranges), polarity for better/worse (schema_gap if absent), time-grain group_by,
-c11-style missing-baseline → ambiguous. Replaces tests/verify/_fixture_plans.py.
+Current stage: Stage 3 complete — compiler + abstention
+Done: docs/abstention.md is the reviewed decision table (rows M/E/G/D/V/X/P/N, config rules C1–C5,
+fixture amendments F1–F3; V6 authored by the owner); compile/compiler.py matches it row for row with
+row ids in comments; compile/periods.py (half-open years/quarters/months/days, 'A to B' ranges,
+bare-hyphen ranges refused, no relative periods); config norm() + metric_index/entity_index (accents,
+case, stored values resolve; uniqueness across dimensions; 'unspecified' reserved; share metrics take
+no column); verify.verify_claim() (Abstain → UNVERIFIABLE verdict with empty sql/params).
+Stage 1 amendments (logged): Ranking.scope (universe as written), Comparison.value ge=0. Fixture
+relabels: c1 → schema_gap, c11 displaced='unspecified' → unsupported_claim_type, c23 scope='2017'.
+Goldens: all 57 fixture claims end-to-end through compiler → engine (45 PASS / 6 FAIL / 6 UNVERIFIABLE
+with expected reasons); tests/verify/_fixture_plans.py retired. Binding tests by name:
+test_binding_a_better_worse_without_polarity_is_schema_gap,
+test_binding_b_time_grain_group_by_resolves_from_time_column_never_entities.
+Next: Stage 4 — extractor (Gemini structured output behind ExtractorClient Protocol, temp 0, one retry,
+span enforcement, mock) + numeric sweep + mini-eval vs the labels. Extractor contract must emit the
+period grammar of docs/abstention.md §P, `scope` for time-grain rankings, `displaced` for overtaking.
 Open questions: docs/recount_claude_code_guide.md C1 still says anthropic/ANTHROPIC_API_KEY; CLAUDE.md §0 (Gemini) wins.
-Fixture claims the engine cannot plan (compiler's job): c1 (COUNT DISTINCT metric), c5/c7 (no baseline period), c30 (no region entity).
+Known false-PASS path (documented, abstention P12): periods partly outside the data range compute over
+the rows present; V2 engine TODO queries min/max of time_column and abstains no_data. G7 (year rankings
+withheld as no_data) is the stopgap. COUNT DISTINCT metrics (c1) deferred.
