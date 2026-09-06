@@ -1,5 +1,25 @@
 """Semantic config contracts."""
 
-from recount.config.schema import Entity, Metric, SemanticConfig, load_config
+from recount.config.schema import (
+    TIME_GRAINS,
+    UNSPECIFIED,
+    Entity,
+    Metric,
+    SemanticConfig,
+    entity_index,
+    load_config,
+    metric_index,
+    norm,
+)
 
-__all__ = ["Entity", "Metric", "SemanticConfig", "load_config"]
+__all__ = [
+    "TIME_GRAINS",
+    "UNSPECIFIED",
+    "Entity",
+    "Metric",
+    "SemanticConfig",
+    "entity_index",
+    "load_config",
+    "metric_index",
+    "norm",
+]
