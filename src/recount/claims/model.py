@@ -102,3 +102,7 @@ class AbstainReason(StrEnum):
     SCHEMA_GAP = "schema_gap"
     # The sentence is irreducibly vague. Only a rewrite fixes it.
     AMBIGUOUS = "ambiguous"
+    # The dataset has no rows for this slice, the growth baseline is zero, or the
+    # ranking subject is not among the groups. Check the period/entity, or the data.
+    # Added in Stage 2 (see docs/learning-log.md): the engine, not the compiler, raises it.
+    NO_DATA = "no_data"

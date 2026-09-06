@@ -68,12 +68,19 @@ When your changes create orphans:
 The test: every changed line should trace directly to the user's request.
 
 ## STATUS (update at the end of every session)
-Current stage: Stage 1 complete — contracts
-Done: claims/model.py (frozen discriminated union: point_value, growth, comparison, ranking, share;
-3-value AbstainReason), config/schema.py (SemanticConfig + YAML loader; per-metric round + polarity),
-spike labels promoted to tests/fixtures/labeled_claims.json (57 claims round-trip; corruption taxonomy
-frozen at 7 classes, binding for Stage 5), tests/fixtures/olist_metrics.yml.
-Next: Stage 2 — deterministic engine (loader, ComputePlans, one parameterized SQL template per plan,
-policies, golden tests from the fixture true_values). Two binding Stage 3 requirements are in
-docs/learning-log.md (polarity for better/worse; time-grain group_by).
+Current stage: Stage 2 complete — deterministic verification engine
+Done: io/loader.py (CSV/Parquet → DuckDB `data`, schema validated against SemanticConfig, byte/row caps),
+compile/plans.py (frozen ComputePlan union: aggregate/growth/compare/rank/share; resolved columns,
+half-open Periods, EntityKey|TimeKey group keys), verify/engine.py (ONE constant SQL template per plan
+kind; identifiers from validated plans, keywords from Literals, all data as bound params),
+verify/policies.py (half_ulp in Decimal, per-metric ROUND in SQL, direction-before-magnitude for
+growth/comparison, RANK with ties, AVG NULL semantics documented), verify/verdict.py.
+AbstainReason gained NO_DATA (visible amendment, see learning-log). examples/olist/orders.parquet
+committed (CC BY-NC-SA, ATTRIBUTION.md). Goldens: 52/57 fixture claims verify to label incl. all 6
+corruptions for the right reason; Hypothesis: round-trip PASS, beyond-tolerance FAIL (1k cases),
+flipped-direction FAIL. Wall 3 added: src/ never imports test scaffolding (tests/verify/_fixture_plans.py).
+Next: Stage 3 — abstention decision table (doc first), compiler.py: alias resolution, period parsing
+(quarters/months/years/ranges), polarity for better/worse (schema_gap if absent), time-grain group_by,
+c11-style missing-baseline → ambiguous. Replaces tests/verify/_fixture_plans.py.
 Open questions: docs/recount_claude_code_guide.md C1 still says anthropic/ANTHROPIC_API_KEY; CLAUDE.md §0 (Gemini) wins.
+Fixture claims the engine cannot plan (compiler's job): c1 (COUNT DISTINCT metric), c5/c7 (no baseline period), c30 (no region entity).

@@ -2,7 +2,9 @@
 
 Wall 1: no LLM client imports outside the allowed probabilistic zone.
 Wall 2: no dynamically built SQL, no eval/exec, anywhere in src/.
+Wall 3: src/ never imports test scaffolding (the fixture plan builder stands in for Stage 3).
 """
+
 from __future__ import annotations
 
 import ast
@@ -72,3 +74,25 @@ def test_wall_2_no_dynamic_sql_or_eval() -> None:
             if _DYNAMIC_SQL.search(line):
                 offenders.append(f"{rel}:{i}: f-string SQL")
     assert not offenders, "Dynamic SQL / eval / exec found:\n" + "\n".join(offenders)
+
+
+_TEST_SCAFFOLDING = ("tests", "_fixture_plans")
+
+
+def test_wall_3_src_never_imports_test_scaffolding() -> None:
+    """tests/verify/_fixture_plans.py is a stand-in for the Stage 3 compiler. It, and
+    anything else under tests/, must never be imported by production code."""
+    offenders: list[str] = []
+    for path in _py_files():
+        rel = _rel(path)
+        tree = ast.parse(path.read_text())
+        for node in ast.walk(tree):
+            names: list[str] = []
+            if isinstance(node, ast.Import):
+                names = [a.name for a in node.names]
+            elif isinstance(node, ast.ImportFrom):
+                names = [node.module or ""] + [a.name for a in node.names]
+            for n in names:
+                if any(n == m or n.startswith(m + ".") for m in _TEST_SCAFFOLDING):
+                    offenders.append(f"{rel}: import {n}")
+    assert not offenders, "Test scaffolding imported by src/:\n" + "\n".join(offenders)
