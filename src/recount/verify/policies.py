@@ -9,6 +9,7 @@ No DuckDB here. Every branch is enumerated so it can be explained unaided:
       comparison higher/lower on the sign of current - baseline;
                  better/worse map through metric polarity (None -> schema_gap);
                  unchanged -> ambiguous, always
+  ranking displaced set -> UNVERIFIABLE unsupported_claim_type (rank change; abstention G10)
   half_ulp: PASS iff |stated - computed| <= 0.5 * 10^-d, d = decimals in the stated number
   rank:     PASS iff the subject's SQL RANK() equals the claimed rank (ties share a rank)
 
@@ -177,11 +178,11 @@ def check_comparison(
 
 
 def check_ranking(claim: Ranking, subject_key: str, rows: tuple[RankRow, ...]) -> PolicyResult:
-    if claim.displaced is not None:
+    if claim.displaced is not None:  # abstention G10; the compiler decides this first
         return _abstain(
-            AbstainReason.AMBIGUOUS,
-            f"'displaced {claim.displaced!r}' asserts a change over time"
-            " that a ranking cannot show",
+            AbstainReason.UNSUPPORTED_CLAIM_TYPE,
+            f"'displaced {claim.displaced!r}' asserts an overtaking, a rank change between"
+            " two periods; rank-change verification is not supported",
             float(claim.rank),
         )
     subject = next((r for r in rows if r.key == subject_key), None)

@@ -37,9 +37,9 @@ def test_fixture_is_the_full_spike_label_set(labels: dict[str, Any]) -> None:
         "comparison": 4,
     }
     assert Counter(r["expected_verdict"] for r in labels["claims"]) == {
-        "PASS": 46,
+        "PASS": 45,
         "FAIL": 6,
-        "UNVERIFIABLE": 5,
+        "UNVERIFIABLE": 6,  # c1 relabelled schema_gap in Stage 3 (abstention F1)
     }
 
 
@@ -119,3 +119,16 @@ def test_claims_are_frozen(labels: dict[str, Any]) -> None:
     assert isinstance(claim, Growth)
     with pytest.raises(ValidationError):
         claim.direction = "increase"  # type: ignore[misc]
+
+
+def test_comparison_value_is_a_magnitude(labels: dict[str, Any]) -> None:
+    raw = _claim("c17", labels) | {"value": -0.5}
+    with pytest.raises(ValidationError):
+        ClaimAdapter.validate_python(raw)
+
+
+def test_ranking_scope_and_displaced_round_trip(labels: dict[str, Any]) -> None:
+    peak = ClaimAdapter.validate_python(_claim("c23", labels))
+    assert isinstance(peak, Ranking) and peak.scope == "2017"
+    lead = ClaimAdapter.validate_python(_claim("c11", labels))
+    assert isinstance(lead, Ranking) and lead.displaced == "unspecified" and lead.scope is None

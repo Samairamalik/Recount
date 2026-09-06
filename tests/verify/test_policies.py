@@ -171,6 +171,6 @@ def test_ties_share_a_rank() -> None:
 
 def test_ranking_abstentions() -> None:
     assert check_ranking(_rank(1, displaced="RJ"), "SP", ROWS).abstain_reason == (
-        AbstainReason.AMBIGUOUS
+        AbstainReason.UNSUPPORTED_CLAIM_TYPE  # abstention G10
     )
     assert check_ranking(_rank(1), "XX", ROWS).abstain_reason == AbstainReason.NO_DATA

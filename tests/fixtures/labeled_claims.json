@@ -71,10 +71,11 @@
         "unit": "count",
         "period": "2017"
       },
-      "expected_verdict": "PASS",
+      "expected_verdict": "UNVERIFIABLE",
+      "expected_reason": "schema_gap",
       "true_value": 27,
       "true_value_sql": "SELECT COUNT(DISTINCT state) FROM o",
-      "notes": ""
+      "notes": "RELABELLED in Stage 3 (was PASS; abstention F1). The config defines no 'state_count' metric and the engine has no COUNT DISTINCT aggregate, so with this config a correct verifier abstains schema_gap. The sentence is true (27 states); COUNT DISTINCT is deferred (docs/abstention.md §5)."
     },
     {
       "claim": {
@@ -234,10 +235,11 @@
         "period": "2017-Q1",
         "subject": "Sao Paulo",
         "rank": 1,
-        "group_by": "state"
+        "group_by": "state",
+        "displaced": "unspecified"
       },
       "expected_verdict": "UNVERIFIABLE",
-      "expected_reason": "ambiguous",
+      "expected_reason": "unsupported_claim_type",
       "true_value": [
         [
           "SP",
@@ -253,7 +255,7 @@
         ]
       ],
       "true_value_sql": "SELECT state, COUNT(*) FROM o WHERE QUARTER(order_date) = 1 GROUP BY 1 ORDER BY 2 DESC LIMIT 3",
-      "notes": "RULING OVERTURNED on review (was FAIL). Data starts 2017-01-05, so no pre-Q1 baseline exists: the 'overtook a prior leader' reading is uncomputable, and the 'was ranked #1' reading is simply true (SP 1850 vs RJ 691). A correct verifier must abstain, so FAIL was the wrong expectation. expected_verdict means 'what a correct verifier should output', not 'is the sentence true'. See d1."
+      "notes": "RULING OVERTURNED on review (was FAIL). Data starts 2017-01-05, so no pre-Q1 baseline exists: the 'overtook a prior leader' reading is uncomputable, and the 'was ranked #1' reading is simply true (SP 1850 vs RJ 691). A correct verifier must abstain, so FAIL was the wrong expectation. expected_verdict means 'what a correct verifier should output', not 'is the sentence true'. See d1. AMENDED in Stage 3 (abstention F2/G10): 'took the lead' asserts an overtaking, carried by displaced='unspecified' (non-null displaced means the text asserts an overtaking; 'unspecified' is the reserved value for an unnamed party). Reason changed from ambiguous to unsupported_claim_type: the sentence is precise, the tool lacks rank-change verification."
     },
     {
       "claim": {
@@ -458,7 +460,8 @@
         "metric": "avg_delivery_days",
         "period": "2017-Q3",
         "rank": 1,
-        "group_by": "quarter"
+        "group_by": "quarter",
+        "scope": "2017"
       },
       "expected_verdict": "PASS",
       "true_value": [

@@ -11,7 +11,7 @@ from typing import Any
 import pytest
 from _fixture_plans import plan_for, state_code
 
-from recount.claims import Claim, ClaimAdapter, Comparison, Growth, Ranking
+from recount.claims import AbstainReason, Claim, ClaimAdapter, Comparison, Growth, Ranking
 from recount.config import load_config
 from recount.io import load_dataset
 from recount.verify import verify
@@ -29,10 +29,8 @@ UNPLANNABLE = {
     "c7": "comparison against a constant ('two weeks'), not a baseline period",
     "c30": "'Southeast and South regions' is not an entity alias: schema_gap",
 }
-# Plannable, but its label is an abstention only the compiler can produce (see d1).
-COMPILER_ONLY = {"c11": "no pre-Q1 baseline exists; 'took the lead' is ambiguous"}
 
-GOLDEN = [r for r in RECORDS if r["claim"]["id"] not in UNPLANNABLE | COMPILER_ONLY]
+GOLDEN = [r for r in RECORDS if r["claim"]["id"] not in UNPLANNABLE]
 
 
 def _claim(record: dict[str, Any]) -> Claim:
@@ -51,11 +49,11 @@ def _true_rank(claim: Ranking, true: list[list[Any]]) -> int:
 
 
 def test_golden_set_covers_the_fixture() -> None:
-    assert len(GOLDEN) == 52
+    assert len(GOLDEN) == 53
     assert Counter(r["expected_verdict"] for r in GOLDEN) == {
         "PASS": 45,
         "FAIL": 6,
-        "UNVERIFIABLE": 1,  # c12, "nearly doubled": no stated magnitude
+        "UNVERIFIABLE": 2,  # c12 "nearly doubled" (no magnitude); c11 displaced (G10)
     }
 
 
@@ -107,14 +105,17 @@ def test_every_corruption_fails_for_the_right_reason() -> None:
     assert flip.delta is None
 
 
-def test_c11_abstention_is_the_compilers_job_not_the_engines() -> None:
-    """Given a plan, the engine PASSes c11 (SP was #1 in Q1). The fixture expects
-    UNVERIFIABLE because no baseline exists for 'took the lead'; producing that
-    abstention is the Stage 3 compiler's responsibility."""
+def test_c11_overtaking_is_carried_by_displaced_not_by_the_span() -> None:
+    """SP was #1 in Q1, so a plain rank check would PASS. The fixture expects
+    UNVERIFIABLE because 'took the lead' asserts an overtaking; that reading reaches
+    the verdict only through the typed `displaced` field (abstention G10)."""
     record = next(r for r in RECORDS if r["claim"]["id"] == "c11")
     claim = _claim(record)
-    assert record["expected_verdict"] == "UNVERIFIABLE"
-    assert verify(DS, claim, plan_for(claim, CFG)).verdict == "PASS"
+    assert isinstance(claim, Ranking) and claim.displaced == "unspecified"
+    v = verify(DS, claim, plan_for(claim, CFG))
+    assert v.verdict == "UNVERIFIABLE" and v.abstain_reason == AbstainReason.UNSUPPORTED_CLAIM_TYPE
+    stripped = claim.model_copy(update={"displaced": None})
+    assert verify(DS, stripped, plan_for(stripped, CFG)).verdict == "PASS"
 
 
 @pytest.mark.parametrize("cid", ["c15", "c36", "c33"])

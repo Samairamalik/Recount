@@ -92,7 +92,7 @@ def plan_for(claim: Claim, cfg: SemanticConfig) -> ComputePlan:
             return RankPlan(
                 time_column=t,
                 measure=m,
-                period=YEAR,
+                period=period(claim.scope),
                 group_by=TimeKey(grain="quarter"),
                 subject_key=period(claim.period).start.isoformat(),
                 polarity=polarity,

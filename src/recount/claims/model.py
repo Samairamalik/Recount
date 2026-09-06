@@ -58,8 +58,10 @@ class Comparison(_ClaimBase):
     # "better"/"worse" are only checkable with metric polarity from config;
     # "unchanged" has no threshold and always abstains, but is recorded, not dropped.
     direction: Literal["higher", "lower", "better", "worse", "unchanged"]
-    # Stated absolute difference, if any. Null for a direction-only comparison.
-    value: float | None
+    # Stated absolute difference, if any, as an unsigned magnitude: the sign lives
+    # in `direction` only (like Growth), so a sign/direction conflict cannot exist.
+    # Null for a direction-only comparison.
+    value: float | None = Field(ge=0)
     baseline_period: str | None = None
 
 
@@ -70,8 +72,13 @@ class Ranking(_ClaimBase):
     # An entities dimension ("state") or a time grain ("quarter").
     group_by: str
     # "SP overtook RJ": captured so the compiler can abstain or check both sides,
-    # instead of silently degrading to "SP is #1" (spike d1).
+    # instead of silently degrading to "SP is #1" (spike d1). Non-null means the
+    # text asserts an overtaking; "unspecified" is the reserved value for an
+    # unnamed party ("took the lead"). Abstains unsupported_claim_type (abstention G10).
     displaced: str | None = None
+    # The ranking universe as written, for time-grain rankings ("of the year" ->
+    # "2017"). Stage 3 amendment (abstention G8): never inferred from a calendar.
+    scope: str | None = None
 
 
 class Share(_ClaimBase):
