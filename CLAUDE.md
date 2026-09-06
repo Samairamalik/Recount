@@ -68,9 +68,10 @@ When your changes create orphans:
 The test: every changed line should trace directly to the user's request.
 
 ## STATUS (update at the end of every session)
-Current stage: Stage 0 — validation spike
-Done: environment verified (uv 0.12.8, `uv sync --all-groups`, 3 tests passing incl. both
-architecture walls); `spike/data/orders.parquet` built — 43,428 delivered 2017 orders,
-2017-01-05..2017-12-31, 27 states.
-Next: spike weekend — generate report → hand-label → config → spike script → G1.
+Current stage: Stage 0 complete — G1 PASSED
+Done: Stage 0 validation spike complete (see spike/RESULTS.md). Compile-and-verify rate on numeric
+claims 68.1% against a 60% threshold → G1 PASSED. Config was not the bottleneck: all 7 abstentions
+were unsupported_claim_type, none from unknown_metric/period/entity.
+Next: Stage 1 — contracts (Claim types + SemanticConfig as Pydantic models, hand labels as test
+fixtures, freeze the seven corruption classes).
 Open questions: docs/recount_claude_code_guide.md C1 still says anthropic/ANTHROPIC_API_KEY; CLAUDE.md §0 (Gemini) wins.

@@ -2,4 +2,6 @@
 One line per session: something I learned, or a question an interviewer would ask about what I built today.
 Sunday ritual: (1) did this week's milestone-state come to exist? (2) what could I be interviewed on? (3) any stop-and-reconsider trigger active?
 
-- 
+- 2026-09-06 — Stage 0, design consequence 1/3: **direction/sign must be a checked field** on growth and comparison claims. Motivating case from the spike: "Fourth-quarter revenue declined by 43.61%" verified as PASS, because the comparator checked magnitude only and never read "declined" — the true change was +43.61%. A false accept on a claim asserting the opposite of the truth. Interviewer question: how does your verifier tell a wrong magnitude apart from a correct magnitude with an inverted sign?
+- 2026-09-06 — Stage 0, design consequence 2/3: **`subject` is first-class on every claim type**, not just `ranking`. 13 of 39 extracted claims had spans naming no entity at all ("336,300.71 in total revenue"); the structured `subject` field was the sole carrier. Span-local verification would have computed the national figure and produced 13 false flags.
+- 2026-09-06 — Stage 0, design consequence 3/3: **extractor recall is weakest on non-numeric claims**. Of 13 genuine extraction misses, 9 were the direction-only comparisons, the rankings, and the vague growth — every claim with no number in the sentence. Since several of those are deterministically checkable, that is lost coverage, not correct abstention. Per spike/RESULTS.md.
