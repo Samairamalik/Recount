@@ -1,0 +1,24 @@
+# Spike config (throwaway). Metric -> aggregation, entity aliases, time column, tolerance.
+dataset: spike/data/orders.parquet
+time_column: order_date
+entity_column: state
+tolerance_rule: half_ulp        # pass if |stated - true| <= 0.5 * 10^-(decimals in stated)
+metrics:
+  revenue:           {agg: sum,   column: revenue}
+  orders:            {agg: count, column: null}
+  avg_order_value:   {agg: avg,   column: revenue}
+  avg_delivery_days: {agg: avg,   column: delivery_days}   # AVG skips the 2 NULL rows
+  order_share_pct:   {agg: share, column: null}
+metric_aliases:
+  revenue: [revenue, total revenue, gross revenue]
+  orders: [orders, order volume, order count]
+  avg_order_value: [average order value]
+  avg_delivery_days: [average delivery time, average delivery times, average delivery turnaround, delivery time]
+  order_share_pct: [order share, share of total orders, share of total order volume, percentage of orders]
+entity_aliases:
+  Sao Paulo: SP
+  Rio de Janeiro: RJ
+  Minas Gerais: MG
+  Rio Grande do Sul: RS
+  Parana: PR
+  Santa Catarina: SC

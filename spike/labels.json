@@ -1,0 +1,970 @@
+{
+  "report": "spike/report.md",
+  "dataset": "spike/data/orders.parquet",
+  "conventions": {
+    "revenue_rounding": "SUM(revenue) rounded to 2dp before comparison. Raw DOUBLE sums vary by ~3.5e-07 with row order (measured), so an unrounded equality test is not well-defined.",
+    "delivery_nulls": "avg_delivery_days uses SQL AVG, which excludes the 2 NULL delivery_days rows. Denominator is 43426 nationally, not 43428. Affected states: RS (n=2590) and SP (n=17070); affected quarters: Q2 and Q4.",
+    "tolerance": "A stated value PASSES if |stated - true| <= 0.5 * 10^-d, where d = decimal places in the stated number (i.e. the stated figure is a correct rounding of the truth)."
+  },
+  "corruption_manifest": {
+    "clean_report": "spike/report_clean.md",
+    "method": "6 hand-injected corruptions, at most one per claim; all other claims are unchanged from the clean report.",
+    "corruptions": [
+      {
+        "id": "c19",
+        "class": "wrong_figure_revenue",
+        "was": "1,913,208.93",
+        "now": "1,931,208.93"
+      },
+      {
+        "id": "c45",
+        "class": "wrong_figure_delivery",
+        "was": "12.08 days",
+        "now": "10.82 days"
+      },
+      {
+        "id": "c25",
+        "class": "flipped_direction",
+        "was": "increased by 43.61%",
+        "now": "declined by 43.61%"
+      },
+      {
+        "id": "c41",
+        "class": "wrong_ranking",
+        "was": "Minas Gerais followed closely in third place",
+        "now": "Santa Catarina followed closely in third place"
+      },
+      {
+        "id": "c54",
+        "class": "swapped_entity",
+        "was": "3.81%",
+        "now": "5.97% (Rio Grande do Sul's true share)"
+      },
+      {
+        "id": "c27",
+        "class": "rounding_drift",
+        "was": "41.47%",
+        "now": "41.52% (true 41.4654, bound 0.005)"
+      }
+    ]
+  },
+  "claims": [
+    {
+      "id": "c1",
+      "type": "point_value",
+      "span": "Across all 27 states",
+      "metric": "state_count",
+      "value": 27,
+      "unit": "count",
+      "period": "2017",
+      "true_value": 27,
+      "true_value_sql": "SELECT COUNT(DISTINCT state) FROM o",
+      "expected_verdict": "PASS",
+      "notes": ""
+    },
+    {
+      "id": "c2",
+      "type": "point_value",
+      "span": "the platform processed 43,428 orders",
+      "metric": "orders",
+      "value": 43428,
+      "unit": "count",
+      "period": "2017",
+      "true_value": 43428,
+      "true_value_sql": "SELECT COUNT(*) FROM o",
+      "expected_verdict": "PASS",
+      "notes": ""
+    },
+    {
+      "id": "c3",
+      "type": "point_value",
+      "span": "generated 6,921,535.24 in total revenue",
+      "metric": "revenue",
+      "value": 6921535.24,
+      "unit": "currency",
+      "period": "2017",
+      "true_value": 6921535.24,
+      "true_value_sql": "SELECT ROUND(SUM(revenue), 2) FROM o",
+      "expected_verdict": "PASS",
+      "notes": "rounded to 2dp; absorbs the ~3.5e-07 float-ordering spread in SUM(revenue)"
+    },
+    {
+      "id": "c4",
+      "type": "point_value",
+      "span": "maintaining an average order value of 159.38",
+      "metric": "avg_order_value",
+      "value": 159.38,
+      "unit": "currency",
+      "period": "2017",
+      "true_value": 159.3796,
+      "true_value_sql": "SELECT ROUND(AVG(revenue), 4) FROM o",
+      "expected_verdict": "PASS",
+      "notes": ""
+    },
+    {
+      "id": "c5",
+      "type": "comparison",
+      "span": "Commercial performance remained stable throughout the year",
+      "metric": "avg_order_value",
+      "value": null,
+      "unit": null,
+      "period": "2017",
+      "true_value": null,
+      "true_value_sql": null,
+      "expected_verdict": "UNVERIFIABLE",
+      "notes": "AMBIGUITY: 'stable' has no threshold and no metric named; which series, and how much drift is stable?"
+    },
+    {
+      "id": "c6",
+      "type": "point_value",
+      "span": "keeping the national average delivery time at 12.98 days",
+      "metric": "avg_delivery_days",
+      "value": 12.98,
+      "unit": "days",
+      "period": "2017",
+      "true_value": 12.979,
+      "true_value_sql": "SELECT ROUND(AVG(delivery_days), 4) FROM o",
+      "expected_verdict": "PASS",
+      "notes": "AVG(delivery_days) excludes the 2 NULL rows (SQL AVG semantics); n=43426 not 43428"
+    },
+    {
+      "id": "c7",
+      "type": "comparison",
+      "span": "remained well under two weeks",
+      "metric": "avg_delivery_days",
+      "value": null,
+      "unit": "days",
+      "period": "2017",
+      "true_value": 12.979,
+      "true_value_sql": "SELECT ROUND(AVG(delivery_days), 4) FROM o",
+      "expected_verdict": "UNVERIFIABLE",
+      "notes": "AMBIGUITY: 'well under' is an undefined margin. 12.979 < 14 is true, but 'well' is not a threshold."
+    },
+    {
+      "id": "c8",
+      "type": "point_value",
+      "span": "recording 4,949 orders",
+      "metric": "orders",
+      "value": 4949,
+      "unit": "count",
+      "period": "2017-Q1",
+      "true_value": 4949,
+      "true_value_sql": "SELECT COUNT(*) FROM o WHERE QUARTER(order_date) = 1",
+      "expected_verdict": "PASS",
+      "notes": ""
+    },
+    {
+      "id": "c9",
+      "type": "point_value",
+      "span": "813,052.64 in revenue",
+      "metric": "revenue",
+      "value": 813052.64,
+      "unit": "currency",
+      "period": "2017-Q1",
+      "true_value": 813052.64,
+      "true_value_sql": "SELECT ROUND(SUM(revenue), 2) FROM o WHERE QUARTER(order_date) = 1",
+      "expected_verdict": "PASS",
+      "notes": "rounded to 2dp; absorbs the ~3.5e-07 float-ordering spread in SUM(revenue)"
+    },
+    {
+      "id": "c10",
+      "type": "point_value",
+      "span": "maintaining an average delivery turnaround of 13.09 days",
+      "metric": "avg_delivery_days",
+      "value": 13.09,
+      "unit": "days",
+      "period": "2017-Q1",
+      "true_value": 13.0857,
+      "true_value_sql": "SELECT ROUND(AVG(delivery_days), 4) FROM o WHERE QUARTER(order_date) = 1",
+      "expected_verdict": "PASS",
+      "notes": "Q1 has 0 NULL delivery rows"
+    },
+    {
+      "id": "c11",
+      "type": "ranking",
+      "span": "Sao Paulo took the lead in the first quarter",
+      "metric": "orders",
+      "value": null,
+      "unit": null,
+      "period": "2017-Q1",
+      "subject": "Sao Paulo",
+      "rank": 1,
+      "group_by": "state",
+      "reason": "ambiguous_baseline",
+      "true_value": [
+        [
+          "SP",
+          1850
+        ],
+        [
+          "RJ",
+          691
+        ],
+        [
+          "MG",
+          686
+        ]
+      ],
+      "true_value_sql": "SELECT state, COUNT(*) FROM o WHERE QUARTER(order_date) = 1 GROUP BY 1 ORDER BY 2 DESC LIMIT 3",
+      "expected_verdict": "UNVERIFIABLE",
+      "notes": "RULING OVERTURNED on review (was FAIL). Data starts 2017-01-05, so no pre-Q1 baseline exists: the 'overtook a prior leader' reading is uncomputable, and the 'was ranked #1' reading is simply true (SP 1850 vs RJ 691). A correct verifier must abstain, so FAIL was the wrong expectation. expected_verdict means 'what a correct verifier should output', not 'is the sentence true'. See d1."
+    },
+    {
+      "id": "c12",
+      "type": "growth",
+      "span": "order volume nearly doubled",
+      "metric": "orders",
+      "value": null,
+      "unit": null,
+      "period": "2017-Q2",
+      "baseline_period": "2017-Q1",
+      "true_value": 81.5316,
+      "true_value_sql": "SELECT 100.0*(SUM(CASE WHEN QUARTER(order_date)=2 THEN 1 ELSE 0 END) - SUM(CASE WHEN QUARTER(order_date)=1 THEN 1 ELSE 0 END)) / SUM(CASE WHEN QUARTER(order_date)=1 THEN 1 ELSE 0 END) FROM o",
+      "expected_verdict": "UNVERIFIABLE",
+      "notes": "AMBIGUITY: 'nearly doubled' states no number. Actual +81.53%. Is 81.53% 'nearly' 100%?"
+    },
+    {
+      "id": "c13",
+      "type": "growth",
+      "span": "order volume surged by 81.53% quarter-over-quarter",
+      "metric": "orders",
+      "value": 81.53,
+      "unit": "percent",
+      "period": "2017-Q2",
+      "baseline_period": "2017-Q1",
+      "true_value": 81.5316,
+      "true_value_sql": "SELECT 100.0*(SUM(CASE WHEN QUARTER(order_date)=2 THEN 1 ELSE 0 END) - SUM(CASE WHEN QUARTER(order_date)=1 THEN 1 ELSE 0 END)) / SUM(CASE WHEN QUARTER(order_date)=1 THEN 1 ELSE 0 END) FROM o",
+      "expected_verdict": "PASS",
+      "notes": ""
+    },
+    {
+      "id": "c14",
+      "type": "point_value",
+      "span": "to reach 8,984 orders",
+      "metric": "orders",
+      "value": 8984,
+      "unit": "count",
+      "period": "2017-Q2",
+      "true_value": 8984,
+      "true_value_sql": "SELECT COUNT(*) FROM o WHERE QUARTER(order_date) = 2",
+      "expected_verdict": "PASS",
+      "notes": ""
+    },
+    {
+      "id": "c15",
+      "type": "growth",
+      "span": "drove revenue growth of 78.06%",
+      "metric": "revenue",
+      "value": 78.06,
+      "unit": "percent",
+      "period": "2017-Q2",
+      "baseline_period": "2017-Q1",
+      "true_value": 78.0591,
+      "true_value_sql": "SELECT 100.0*(SUM(CASE WHEN QUARTER(order_date)=2 THEN revenue ELSE 0 END) - SUM(CASE WHEN QUARTER(order_date)=1 THEN revenue ELSE 0 END)) / SUM(CASE WHEN QUARTER(order_date)=1 THEN revenue ELSE 0 END) FROM o",
+      "expected_verdict": "PASS",
+      "notes": ""
+    },
+    {
+      "id": "c16",
+      "type": "point_value",
+      "span": "to hit 1,447,714.17",
+      "metric": "revenue",
+      "value": 1447714.17,
+      "unit": "currency",
+      "period": "2017-Q2",
+      "true_value": 1447714.17,
+      "true_value_sql": "SELECT ROUND(SUM(revenue), 2) FROM o WHERE QUARTER(order_date) = 2",
+      "expected_verdict": "PASS",
+      "notes": "rounded to 2dp; absorbs the ~3.5e-07 float-ordering spread in SUM(revenue)"
+    },
+    {
+      "id": "c17",
+      "type": "comparison",
+      "span": "delivery performance improved",
+      "metric": "avg_delivery_days",
+      "value": null,
+      "unit": null,
+      "period": "2017-Q2",
+      "baseline_period": "2017-Q1",
+      "true_value": [
+        [
+          12.5534,
+          13.0857
+        ]
+      ],
+      "true_value_sql": "SELECT ROUND(AVG(CASE WHEN QUARTER(order_date)=2 THEN delivery_days END), 4), ROUND(AVG(CASE WHEN QUARTER(order_date)=1 THEN delivery_days END), 4) FROM o",
+      "expected_verdict": "PASS",
+      "notes": "Direction-only comparison: Q2 12.553 < Q1 13.086. No number stated but the direction is checkable."
+    },
+    {
+      "id": "c18",
+      "type": "point_value",
+      "span": "bringing the average delivery time down to 12.55 days",
+      "metric": "avg_delivery_days",
+      "value": 12.55,
+      "unit": "days",
+      "period": "2017-Q2",
+      "true_value": 12.5534,
+      "true_value_sql": "SELECT ROUND(AVG(delivery_days), 4) FROM o WHERE QUARTER(order_date) = 2",
+      "expected_verdict": "PASS",
+      "notes": "Q2 contains 1 of the 2 NULL delivery rows; excluded by AVG (n=8983)"
+    },
+    {
+      "id": "c19",
+      "type": "point_value",
+      "span": "generating 1,931,208.93 in gross revenue",
+      "metric": "revenue",
+      "value": 1931208.93,
+      "unit": "currency",
+      "period": "2017-Q3",
+      "true_value": 1913208.93,
+      "true_value_sql": "SELECT ROUND(SUM(revenue), 2) FROM o WHERE QUARTER(order_date) = 3",
+      "expected_verdict": "FAIL",
+      "notes": "CORRUPTION wrong_figure_revenue: original stated 1,913,208.93 (correct). Digits transposed to 1,931,208.93, overstating Q3 revenue by 18,000.00. rounded to 2dp; absorbs the ~3.5e-07 float-ordering spread in SUM(revenue)"
+    },
+    {
+      "id": "c20",
+      "type": "point_value",
+      "span": "across 12,215 orders",
+      "metric": "orders",
+      "value": 12215,
+      "unit": "count",
+      "period": "2017-Q3",
+      "true_value": 12215,
+      "true_value_sql": "SELECT COUNT(*) FROM o WHERE QUARTER(order_date) = 3",
+      "expected_verdict": "PASS",
+      "notes": ""
+    },
+    {
+      "id": "c21",
+      "type": "growth",
+      "span": "quarter-over-quarter growth of 32.15% in revenue",
+      "metric": "revenue",
+      "value": 32.15,
+      "unit": "percent",
+      "period": "2017-Q3",
+      "baseline_period": "2017-Q2",
+      "true_value": 32.1538,
+      "true_value_sql": "SELECT 100.0*(SUM(CASE WHEN QUARTER(order_date)=3 THEN revenue ELSE 0 END) - SUM(CASE WHEN QUARTER(order_date)=2 THEN revenue ELSE 0 END)) / SUM(CASE WHEN QUARTER(order_date)=2 THEN revenue ELSE 0 END) FROM o",
+      "expected_verdict": "PASS",
+      "notes": ""
+    },
+    {
+      "id": "c22",
+      "type": "growth",
+      "span": "35.96% in order volume",
+      "metric": "orders",
+      "value": 35.96,
+      "unit": "percent",
+      "period": "2017-Q3",
+      "baseline_period": "2017-Q2",
+      "true_value": 35.9639,
+      "true_value_sql": "SELECT 100.0*(SUM(CASE WHEN QUARTER(order_date)=3 THEN 1 ELSE 0 END) - SUM(CASE WHEN QUARTER(order_date)=2 THEN 1 ELSE 0 END)) / SUM(CASE WHEN QUARTER(order_date)=2 THEN 1 ELSE 0 END) FROM o",
+      "expected_verdict": "PASS",
+      "notes": ""
+    },
+    {
+      "id": "c23",
+      "type": "ranking",
+      "span": "achieved the peak fulfillment efficiency of the year",
+      "metric": "avg_delivery_days",
+      "value": null,
+      "unit": null,
+      "period": "2017-Q3",
+      "rank": 1,
+      "group_by": "quarter",
+      "true_value": [
+        [
+          3,
+          11.4061
+        ],
+        [
+          2,
+          12.5534
+        ],
+        [
+          1,
+          13.0857
+        ],
+        [
+          4,
+          14.2817
+        ]
+      ],
+      "true_value_sql": "SELECT QUARTER(order_date), ROUND(AVG(delivery_days), 4) FROM o GROUP BY 1 ORDER BY 2 ASC",
+      "expected_verdict": "PASS",
+      "notes": "Q3 11.406 is the lowest of the four quarterly averages. 'Peak efficiency' = lowest delivery days."
+    },
+    {
+      "id": "c24",
+      "type": "point_value",
+      "span": "reducing average delivery times to a year-low of 11.41 days",
+      "metric": "avg_delivery_days",
+      "value": 11.41,
+      "unit": "days",
+      "period": "2017-Q3",
+      "true_value": 11.4061,
+      "true_value_sql": "SELECT ROUND(AVG(delivery_days), 4) FROM o WHERE QUARTER(order_date) = 3",
+      "expected_verdict": "PASS",
+      "notes": "Q3 has 0 NULL delivery rows"
+    },
+    {
+      "id": "c25",
+      "type": "growth",
+      "span": "Fourth-quarter revenue declined by 43.61% over the prior quarter",
+      "metric": "revenue",
+      "value": 43.61,
+      "unit": "percent",
+      "period": "2017-Q4",
+      "baseline_period": "2017-Q3",
+      "direction": "decrease",
+      "true_value": 43.61,
+      "true_value_sql": "SELECT 100.0*(SUM(CASE WHEN QUARTER(order_date)=4 THEN revenue ELSE 0 END) - SUM(CASE WHEN QUARTER(order_date)=3 THEN revenue ELSE 0 END)) / SUM(CASE WHEN QUARTER(order_date)=3 THEN revenue ELSE 0 END) FROM o",
+      "expected_verdict": "FAIL",
+      "notes": "CORRUPTION flipped_direction: original read 'increased by 43.61%' (correct). Reversed to 'declined'; the magnitude is right but the sign is inverted. Q4 revenue rose 43.61% over Q3."
+    },
+    {
+      "id": "c26",
+      "type": "point_value",
+      "span": "to reach 2,747,559.5",
+      "metric": "revenue",
+      "value": 2747559.5,
+      "unit": "currency",
+      "period": "2017-Q4",
+      "true_value": 2747559.5,
+      "true_value_sql": "SELECT ROUND(SUM(revenue), 2) FROM o WHERE QUARTER(order_date) = 4",
+      "expected_verdict": "PASS",
+      "notes": "rounded to 2dp; absorbs the ~3.5e-07 float-ordering spread in SUM(revenue)"
+    },
+    {
+      "id": "c27",
+      "type": "growth",
+      "span": "order count expanded by 41.52%",
+      "metric": "orders",
+      "value": 41.52,
+      "unit": "percent",
+      "period": "2017-Q4",
+      "baseline_period": "2017-Q3",
+      "true_value": 41.4654,
+      "true_value_sql": "SELECT 100.0*(SUM(CASE WHEN QUARTER(order_date)=4 THEN 1 ELSE 0 END) - SUM(CASE WHEN QUARTER(order_date)=3 THEN 1 ELSE 0 END)) / SUM(CASE WHEN QUARTER(order_date)=3 THEN 1 ELSE 0 END) FROM o",
+      "expected_verdict": "FAIL",
+      "notes": "CORRUPTION rounding_drift: original stated 41.47 (correct, diff 0.0046 inside the 0.005 bound). Drifted to 41.52 — diff 0.0546, just beyond tolerance. This is the claim a loose tolerance would wave through."
+    },
+    {
+      "id": "c28",
+      "type": "point_value",
+      "span": "to peak at 17,280 orders",
+      "metric": "orders",
+      "value": 17280,
+      "unit": "count",
+      "period": "2017-Q4",
+      "true_value": 17280,
+      "true_value_sql": "SELECT COUNT(*) FROM o WHERE QUARTER(order_date) = 4",
+      "expected_verdict": "PASS",
+      "notes": ""
+    },
+    {
+      "id": "c29",
+      "type": "point_value",
+      "span": "causing average delivery times to stretch to 14.28 days",
+      "metric": "avg_delivery_days",
+      "value": 14.28,
+      "unit": "days",
+      "period": "2017-Q4",
+      "true_value": 14.2817,
+      "true_value_sql": "SELECT ROUND(AVG(delivery_days), 4) FROM o WHERE QUARTER(order_date) = 4",
+      "expected_verdict": "PASS",
+      "notes": "Q4 contains 1 of the 2 NULL delivery rows; excluded by AVG (n=17279)"
+    },
+    {
+      "id": "c30",
+      "type": "comparison",
+      "span": "heavily concentrated in the Southeast and South regions",
+      "metric": "orders",
+      "value": null,
+      "unit": null,
+      "period": "2017",
+      "true_value": null,
+      "true_value_sql": null,
+      "expected_verdict": "UNVERIFIABLE",
+      "notes": "OUT OF SCHEMA: dataset has no region column; state->region mapping does not exist in the data. Also 'heavily' is undefined."
+    },
+    {
+      "id": "c31",
+      "type": "point_value",
+      "span": "generating 2,428,002.62 in revenue",
+      "metric": "revenue",
+      "value": 2428002.62,
+      "unit": "currency",
+      "period": "2017",
+      "subject": "Sao Paulo",
+      "true_value": 2428002.62,
+      "true_value_sql": "SELECT ROUND(SUM(revenue), 2) FROM o WHERE state = 'SP'",
+      "expected_verdict": "PASS",
+      "notes": "rounded to 2dp; absorbs the ~3.5e-07 float-ordering spread in SUM(revenue)"
+    },
+    {
+      "id": "c32",
+      "type": "point_value",
+      "span": "across 17,071 orders",
+      "metric": "orders",
+      "value": 17071,
+      "unit": "count",
+      "period": "2017",
+      "subject": "Sao Paulo",
+      "true_value": 17071,
+      "true_value_sql": "SELECT COUNT(*) FROM o WHERE state = 'SP'",
+      "expected_verdict": "PASS",
+      "notes": ""
+    },
+    {
+      "id": "c33",
+      "type": "share",
+      "span": "representing roughly two-fifths of all orders at 39.31%",
+      "metric": "order_share_pct",
+      "value": 39.31,
+      "unit": "percent",
+      "period": "2017",
+      "subject": "Sao Paulo",
+      "true_value": 39.3087,
+      "true_value_sql": "SELECT 100.0 * (SELECT COUNT(*) FROM o WHERE state = 'SP') / (SELECT COUNT(*) FROM o)",
+      "expected_verdict": "PASS",
+      "notes": "'roughly two-fifths' is vague but an exact number is stated, so per LABELING_GUIDE rule 3 the number governs."
+    },
+    {
+      "id": "c34",
+      "type": "ranking",
+      "span": "set the national benchmark for fulfillment speed",
+      "metric": "avg_delivery_days",
+      "value": null,
+      "unit": null,
+      "period": "2017",
+      "subject": "Sao Paulo",
+      "rank": 1,
+      "group_by": "state",
+      "true_value": [
+        [
+          "SP",
+          9.305
+        ],
+        [
+          "MG",
+          12.0765
+        ],
+        [
+          "PR",
+          12.4019
+        ]
+      ],
+      "true_value_sql": "SELECT state, ROUND(AVG(delivery_days), 4) FROM o GROUP BY 1 ORDER BY 2 ASC LIMIT 3",
+      "expected_verdict": "PASS",
+      "notes": "VERIFIED NON-OBVIOUS: SP 9.305 is fastest of ALL 27 states, not just the 6 named in the report."
+    },
+    {
+      "id": "c35",
+      "type": "point_value",
+      "span": "a remarkably fast average delivery time of just 9.3 days",
+      "metric": "avg_delivery_days",
+      "value": 9.3,
+      "unit": "days",
+      "period": "2017",
+      "subject": "Sao Paulo",
+      "true_value": 9.305,
+      "true_value_sql": "SELECT ROUND(AVG(delivery_days), 4) FROM o WHERE state = 'SP'",
+      "expected_verdict": "PASS",
+      "notes": "stated to 1dp"
+    },
+    {
+      "id": "c36",
+      "type": "ranking",
+      "span": "Rio de Janeiro secured the second position overall",
+      "metric": "orders",
+      "value": null,
+      "unit": null,
+      "period": "2017",
+      "subject": "Rio de Janeiro",
+      "rank": 2,
+      "group_by": "state",
+      "true_value": [
+        [
+          "SP",
+          17071,
+          2428002.62
+        ],
+        [
+          "RJ",
+          5968,
+          1012943.05
+        ],
+        [
+          "MG",
+          5240,
+          825060.95
+        ]
+      ],
+      "true_value_sql": "SELECT state, COUNT(*), ROUND(SUM(revenue), 2) FROM o GROUP BY 1 ORDER BY 2 DESC LIMIT 3",
+      "expected_verdict": "PASS",
+      "notes": "AMBIGUITY RESOLVED BENIGNLY: 'overall' does not say orders or revenue; RJ is #2 on both, so both readings agree."
+    },
+    {
+      "id": "c37",
+      "type": "point_value",
+      "span": "generating 1,012,943.05 in revenue",
+      "metric": "revenue",
+      "value": 1012943.05,
+      "unit": "currency",
+      "period": "2017",
+      "subject": "Rio de Janeiro",
+      "true_value": 1012943.05,
+      "true_value_sql": "SELECT ROUND(SUM(revenue), 2) FROM o WHERE state = 'RJ'",
+      "expected_verdict": "PASS",
+      "notes": "rounded to 2dp; absorbs the ~3.5e-07 float-ordering spread in SUM(revenue)"
+    },
+    {
+      "id": "c38",
+      "type": "point_value",
+      "span": "from 5,968 orders",
+      "metric": "orders",
+      "value": 5968,
+      "unit": "count",
+      "period": "2017",
+      "subject": "Rio de Janeiro",
+      "true_value": 5968,
+      "true_value_sql": "SELECT COUNT(*) FROM o WHERE state = 'RJ'",
+      "expected_verdict": "PASS",
+      "notes": ""
+    },
+    {
+      "id": "c39",
+      "type": "share",
+      "span": "accounted for 13.74% of total orders nationwide",
+      "metric": "order_share_pct",
+      "value": 13.74,
+      "unit": "percent",
+      "period": "2017",
+      "subject": "Rio de Janeiro",
+      "true_value": 13.7423,
+      "true_value_sql": "SELECT 100.0 * (SELECT COUNT(*) FROM o WHERE state = 'RJ') / (SELECT COUNT(*) FROM o)",
+      "expected_verdict": "PASS",
+      "notes": ""
+    },
+    {
+      "id": "c40",
+      "type": "point_value",
+      "span": "averaging 14.74 days for delivery",
+      "metric": "avg_delivery_days",
+      "value": 14.74,
+      "unit": "days",
+      "period": "2017",
+      "subject": "Rio de Janeiro",
+      "true_value": 14.7373,
+      "true_value_sql": "SELECT ROUND(AVG(delivery_days), 4) FROM o WHERE state = 'RJ'",
+      "expected_verdict": "PASS",
+      "notes": ""
+    },
+    {
+      "id": "c41",
+      "type": "ranking",
+      "span": "Santa Catarina followed closely in third place",
+      "metric": "orders",
+      "value": null,
+      "unit": null,
+      "period": "2017",
+      "subject": "Santa Catarina",
+      "rank": 3,
+      "group_by": "state",
+      "true_value": [
+        [
+          "SP",
+          17071
+        ],
+        [
+          "RJ",
+          5968
+        ],
+        [
+          "MG",
+          5240
+        ],
+        [
+          "RS",
+          2591
+        ],
+        [
+          "PR",
+          2192
+        ],
+        [
+          "SC",
+          1653
+        ]
+      ],
+      "true_value_sql": "SELECT state, COUNT(*) FROM o GROUP BY 1 ORDER BY 2 DESC LIMIT 6",
+      "expected_verdict": "FAIL",
+      "notes": "CORRUPTION wrong_ranking: original named Minas Gerais (genuinely #3, 5240 orders). Replaced with Santa Catarina, which ranks 6th with 1653 orders. The sentence was split so MG still owns c42-c45."
+    },
+    {
+      "id": "c42",
+      "type": "share",
+      "span": "captured a 12.07% order share",
+      "metric": "order_share_pct",
+      "value": 12.07,
+      "unit": "percent",
+      "period": "2017",
+      "subject": "Minas Gerais",
+      "true_value": 12.0659,
+      "true_value_sql": "SELECT 100.0 * (SELECT COUNT(*) FROM o WHERE state = 'MG') / (SELECT COUNT(*) FROM o)",
+      "expected_verdict": "PASS",
+      "notes": ""
+    },
+    {
+      "id": "c43",
+      "type": "point_value",
+      "span": "with 5,240 orders",
+      "metric": "orders",
+      "value": 5240,
+      "unit": "count",
+      "period": "2017",
+      "subject": "Minas Gerais",
+      "true_value": 5240,
+      "true_value_sql": "SELECT COUNT(*) FROM o WHERE state = 'MG'",
+      "expected_verdict": "PASS",
+      "notes": ""
+    },
+    {
+      "id": "c44",
+      "type": "point_value",
+      "span": "that generated 825,060.95 in revenue",
+      "metric": "revenue",
+      "value": 825060.95,
+      "unit": "currency",
+      "period": "2017",
+      "subject": "Minas Gerais",
+      "true_value": 825060.95,
+      "true_value_sql": "SELECT ROUND(SUM(revenue), 2) FROM o WHERE state = 'MG'",
+      "expected_verdict": "PASS",
+      "notes": "rounded to 2dp; absorbs the ~3.5e-07 float-ordering spread in SUM(revenue)"
+    },
+    {
+      "id": "c45",
+      "type": "point_value",
+      "span": "supported by an average delivery time of 10.82 days",
+      "metric": "avg_delivery_days",
+      "value": 10.82,
+      "unit": "days",
+      "period": "2017",
+      "subject": "Minas Gerais",
+      "true_value": 12.0765,
+      "true_value_sql": "SELECT ROUND(AVG(delivery_days), 4) FROM o WHERE state = 'MG'",
+      "expected_verdict": "FAIL",
+      "notes": "CORRUPTION wrong_figure_delivery: original stated 12.08 (correct, true 12.0765). Digits transposed to 10.82, understating MG delivery time by 1.26 days."
+    },
+    {
+      "id": "c46",
+      "type": "point_value",
+      "span": "Rio Grande do Sul generated 411,077.38 in revenue",
+      "metric": "revenue",
+      "value": 411077.38,
+      "unit": "currency",
+      "period": "2017",
+      "subject": "Rio Grande do Sul",
+      "true_value": 411077.38,
+      "true_value_sql": "SELECT ROUND(SUM(revenue), 2) FROM o WHERE state = 'RS'",
+      "expected_verdict": "PASS",
+      "notes": "rounded to 2dp; absorbs the ~3.5e-07 float-ordering spread in SUM(revenue)"
+    },
+    {
+      "id": "c47",
+      "type": "point_value",
+      "span": "across 2,591 orders",
+      "metric": "orders",
+      "value": 2591,
+      "unit": "count",
+      "period": "2017",
+      "subject": "Rio Grande do Sul",
+      "true_value": 2591,
+      "true_value_sql": "SELECT COUNT(*) FROM o WHERE state = 'RS'",
+      "expected_verdict": "PASS",
+      "notes": ""
+    },
+    {
+      "id": "c48",
+      "type": "share",
+      "span": "capturing 5.97% of total orders",
+      "metric": "order_share_pct",
+      "value": 5.97,
+      "unit": "percent",
+      "period": "2017",
+      "subject": "Rio Grande do Sul",
+      "true_value": 5.9662,
+      "true_value_sql": "SELECT 100.0 * (SELECT COUNT(*) FROM o WHERE state = 'RS') / (SELECT COUNT(*) FROM o)",
+      "expected_verdict": "PASS",
+      "notes": ""
+    },
+    {
+      "id": "c49",
+      "type": "point_value",
+      "span": "with an average delivery time of 15.23 days",
+      "metric": "avg_delivery_days",
+      "value": 15.23,
+      "unit": "days",
+      "period": "2017",
+      "subject": "Rio Grande do Sul",
+      "true_value": 15.2336,
+      "true_value_sql": "SELECT ROUND(AVG(delivery_days), 4) FROM o WHERE state = 'RS'",
+      "expected_verdict": "PASS",
+      "notes": "RS contains 1 of the 2 NULL delivery rows (order 2d858f45..., 2017-05-25); excluded by AVG (n=2590)"
+    },
+    {
+      "id": "c50",
+      "type": "point_value",
+      "span": "Parana logged 2,192 orders",
+      "metric": "orders",
+      "value": 2192,
+      "unit": "count",
+      "period": "2017",
+      "subject": "Parana",
+      "true_value": 2192,
+      "true_value_sql": "SELECT COUNT(*) FROM o WHERE state = 'PR'",
+      "expected_verdict": "PASS",
+      "notes": ""
+    },
+    {
+      "id": "c51",
+      "type": "share",
+      "span": "for a 5.05% order share",
+      "metric": "order_share_pct",
+      "value": 5.05,
+      "unit": "percent",
+      "period": "2017",
+      "subject": "Parana",
+      "true_value": 5.0474,
+      "true_value_sql": "SELECT 100.0 * (SELECT COUNT(*) FROM o WHERE state = 'PR') / (SELECT COUNT(*) FROM o)",
+      "expected_verdict": "PASS",
+      "notes": ""
+    },
+    {
+      "id": "c52",
+      "type": "point_value",
+      "span": "336,300.71 in total revenue",
+      "metric": "revenue",
+      "value": 336300.71,
+      "unit": "currency",
+      "period": "2017",
+      "subject": "Parana",
+      "true_value": 336300.71,
+      "true_value_sql": "SELECT ROUND(SUM(revenue), 2) FROM o WHERE state = 'PR'",
+      "expected_verdict": "PASS",
+      "notes": "rounded to 2dp; absorbs the ~3.5e-07 float-ordering spread in SUM(revenue)"
+    },
+    {
+      "id": "c53",
+      "type": "point_value",
+      "span": "averaging 12.4 days for delivery fulfillment",
+      "metric": "avg_delivery_days",
+      "value": 12.4,
+      "unit": "days",
+      "period": "2017",
+      "subject": "Parana",
+      "true_value": 12.4019,
+      "true_value_sql": "SELECT ROUND(AVG(delivery_days), 4) FROM o WHERE state = 'PR'",
+      "expected_verdict": "PASS",
+      "notes": "stated to 1dp"
+    },
+    {
+      "id": "c54",
+      "type": "share",
+      "span": "Santa Catarina captured a 5.97% share of total order volume",
+      "metric": "order_share_pct",
+      "value": 5.97,
+      "unit": "percent",
+      "period": "2017",
+      "subject": "Santa Catarina",
+      "true_value": 3.8063,
+      "true_value_sql": "SELECT 100.0 * (SELECT COUNT(*) FROM o WHERE state = 'SC') / (SELECT COUNT(*) FROM o)",
+      "expected_verdict": "FAIL",
+      "notes": "CORRUPTION swapped_entity: 5.97 is Rio Grande do Sul's TRUE order share, attributed here to Santa Catarina, whose true share is 3.8063. Both numbers are real; only the entity binding is wrong — the failure mode a value-only sanity check cannot catch."
+    },
+    {
+      "id": "c55",
+      "type": "point_value",
+      "span": "with 1,653 orders",
+      "metric": "orders",
+      "value": 1653,
+      "unit": "count",
+      "period": "2017",
+      "subject": "Santa Catarina",
+      "true_value": 1653,
+      "true_value_sql": "SELECT COUNT(*) FROM o WHERE state = 'SC'",
+      "expected_verdict": "PASS",
+      "notes": ""
+    },
+    {
+      "id": "c56",
+      "type": "point_value",
+      "span": "generating 260,144.81 in gross revenue",
+      "metric": "revenue",
+      "value": 260144.81,
+      "unit": "currency",
+      "period": "2017",
+      "subject": "Santa Catarina",
+      "true_value": 260144.81,
+      "true_value_sql": "SELECT ROUND(SUM(revenue), 2) FROM o WHERE state = 'SC'",
+      "expected_verdict": "PASS",
+      "notes": "rounded to 2dp; absorbs the ~3.5e-07 float-ordering spread in SUM(revenue)"
+    },
+    {
+      "id": "c57",
+      "type": "point_value",
+      "span": "while recording an average delivery time of 15.33 days",
+      "metric": "avg_delivery_days",
+      "value": 15.33,
+      "unit": "days",
+      "period": "2017",
+      "subject": "Santa Catarina",
+      "true_value": 15.3267,
+      "true_value_sql": "SELECT ROUND(AVG(delivery_days), 4) FROM o WHERE state = 'SC'",
+      "expected_verdict": "PASS",
+      "notes": ""
+    }
+  ],
+  "dilemmas": [
+    {
+      "id": "d1",
+      "claim": "c11",
+      "dilemma": "'Sao Paulo took the lead in the first quarter' reads two ways: 'was ranked #1 in Q1' (TRUE - SP had 1850 orders vs RJ 691) or 'overtook a previous leader during Q1' (NOT CHECKABLE - the dataset starts 2017-01-05, so no prior period exists). Initially labeled FAIL on the grounds that the claim was constructed to be false; that ruling was OVERTURNED on review. Neither reading supports FAIL: one is true, the other is uncomputable, so a correct verifier must abstain.",
+      "resolution": "UNVERIFIABLE, reason=ambiguous_baseline (overturned from FAIL)",
+      "lesson": "expected_verdict records what a correct verifier should OUTPUT, not whether the sentence is true. Conflating the two would have taught the spike to score a correct abstention as a miss."
+    },
+    {
+      "id": "d2",
+      "claim": "c7/c12",
+      "dilemma": "Vague magnitude words with no stated number ('well under two weeks', 'nearly doubled') are directionally true but have no threshold. Labeled UNVERIFIABLE per LABELING_GUIDE rule 3. This is the abstention fixture the spike most needs.",
+      "resolution": "UNVERIFIABLE"
+    },
+    {
+      "id": "d3",
+      "claim": "c30",
+      "dilemma": "'Southeast and South regions' requires a state->region mapping that does not exist in the dataset. This is not a vagueness problem but a schema gap: the config would need a grouping dimension the fact table lacks.",
+      "resolution": "UNVERIFIABLE (out of schema)"
+    },
+    {
+      "id": "d4",
+      "claim": "c36",
+      "dilemma": "'second position overall' does not say by what measure. RJ is #2 by both orders and revenue, so both readings agree and the ambiguity is benign here - but a compiler cannot know that without computing both.",
+      "resolution": "PASS, but flagged as a latent abstention rule"
+    },
+    {
+      "id": "d5",
+      "claim": "c17/c23",
+      "dilemma": "'delivery performance improved' and 'peak fulfillment efficiency' state a direction/superlative with no number. They ARE deterministically checkable, unlike d2. Suggests the claim schema needs direction-only comparison and superlative-ranking variants that carry no stated value.",
+      "resolution": "PASS (checkable without a stated number)"
+    },
+    {
+      "id": "d6",
+      "claim": "c3 and all revenue sums",
+      "dilemma": "SUM over a DOUBLE column is order-dependent (measured spread 3.5e-07 across three orderings). 'The true value' is undefined until a rounding rule is fixed. Recorded as a convention, not a per-claim note.",
+      "resolution": "round to 2dp before comparison"
+    }
+  ]
+}
