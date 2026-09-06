@@ -68,10 +68,12 @@ When your changes create orphans:
 The test: every changed line should trace directly to the user's request.
 
 ## STATUS (update at the end of every session)
-Current stage: Stage 0 complete — G1 PASSED
-Done: Stage 0 validation spike complete (see spike/RESULTS.md). Compile-and-verify rate on numeric
-claims 68.1% against a 60% threshold → G1 PASSED. Config was not the bottleneck: all 7 abstentions
-were unsupported_claim_type, none from unknown_metric/period/entity.
-Next: Stage 1 — contracts (Claim types + SemanticConfig as Pydantic models, hand labels as test
-fixtures, freeze the seven corruption classes).
+Current stage: Stage 1 complete — contracts
+Done: claims/model.py (frozen discriminated union: point_value, growth, comparison, ranking, share;
+3-value AbstainReason), config/schema.py (SemanticConfig + YAML loader; per-metric round + polarity),
+spike labels promoted to tests/fixtures/labeled_claims.json (57 claims round-trip; corruption taxonomy
+frozen at 7 classes, binding for Stage 5), tests/fixtures/olist_metrics.yml.
+Next: Stage 2 — deterministic engine (loader, ComputePlans, one parameterized SQL template per plan,
+policies, golden tests from the fixture true_values). Two binding Stage 3 requirements are in
+docs/learning-log.md (polarity for better/worse; time-grain group_by).
 Open questions: docs/recount_claude_code_guide.md C1 still says anthropic/ANTHROPIC_API_KEY; CLAUDE.md §0 (Gemini) wins.
