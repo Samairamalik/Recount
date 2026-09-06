@@ -68,23 +68,28 @@ When your changes create orphans:
 The test: every changed line should trace directly to the user's request.
 
 ## STATUS (update at the end of every session)
-Current stage: Stage 3 complete — compiler + abstention
-Done: docs/abstention.md is the reviewed decision table (rows M/E/G/D/V/X/P/N, config rules C1–C5,
-fixture amendments F1–F3; V6 authored by the owner); compile/compiler.py matches it row for row with
-row ids in comments; compile/periods.py (half-open years/quarters/months/days, 'A to B' ranges,
-bare-hyphen ranges refused, no relative periods); config norm() + metric_index/entity_index (accents,
-case, stored values resolve; uniqueness across dimensions; 'unspecified' reserved; share metrics take
-no column); verify.verify_claim() (Abstain → UNVERIFIABLE verdict with empty sql/params).
-Stage 1 amendments (logged): Ranking.scope (universe as written), Comparison.value ge=0. Fixture
-relabels: c1 → schema_gap, c11 displaced='unspecified' → unsupported_claim_type, c23 scope='2017'.
-Goldens: all 57 fixture claims end-to-end through compiler → engine (45 PASS / 6 FAIL / 6 UNVERIFIABLE
-with expected reasons); tests/verify/_fixture_plans.py retired. Binding tests by name:
-test_binding_a_better_worse_without_polarity_is_schema_gap,
-test_binding_b_time_grain_group_by_resolves_from_time_column_never_entities.
-Next: Stage 4 — extractor (Gemini structured output behind ExtractorClient Protocol, temp 0, one retry,
-span enforcement, mock) + numeric sweep + mini-eval vs the labels. Extractor contract must emit the
-period grammar of docs/abstention.md §P, `scope` for time-grain rankings, `displaced` for overtaking.
+Current stage: Stage 4 complete — extractor + sweep + extraction eval
+Done: src/recount/extract/ (the only LLM zone): client.py (ExtractorClient Protocol; GeminiClient pinned
+to gemini-3.6-flash, temperature 0, response_json_schema, key from env/.env; MockClient replays a
+recording bound to model+prompt+artifact+schema hashes and refuses a stale one; RecordingClient),
+prompt.py (rewritten against the 57 labels; invented-domain few-shots; period grammar of abstention §P,
+scope/displaced/unsigned-magnitude contracts), extractor.py (wire schema derived from the Claim models
+with per-class enum union; Pydantic re-validation; REJECT never repair: span not verbatim, duplicate
+span/id, foreign non-null field, invalid claim; one retry that is not expected to fix content-level
+failures), sweep.py (numeric tokens incl. 1,41,834 / R$1,447,714.17 / 1.42M / 12.4%; bare 1900–2099
+skipped as years), eval.py (d7 matching policy: first-occurrence overlap, one-to-one), record.py
+(python -m recount.extract.record ARTIFACT OUT). src/recount/pipeline.py: run(artifact, cfg, dataset,
+client) -> extraction + verdicts. Recordings in tests/fixtures/extract/{report,report_clean}.json.
+Eval (docs/eval.md, pinned by tests/extract/test_eval.py): recall 0.9649 (55/57), precision 0.8871
+(55/62), span validity 1.0, 0 false accepts, 0 false flags, subject 28/28, period 55/55, direction 10/10.
+One iteration, a bug not a prompt change: the flat wire schema took `direction` from Growth alone so
+comparisons could never be emitted (iteration 1: recall 0.9123). Clean report e2e: 58 PASS / 8
+UNVERIFIABLE / 0 FAIL. Live smoke behind RECOUNT_LIVE=1; CI is keyless.
+Next: Stage 5 — benchmark (seven corruption generators, metrics module, `recount bench`, README table
+in fixture mode, LLM-as-judge baseline in bench/baseline_judge.py). Decide the split rule for the 20 new
+labels first (docs/eval.md caveats): the model splits "X stretched to 14.28 days" into comparison +
+point_value; the labels treat it as one claim.
 Open questions: docs/recount_claude_code_guide.md C1 still says anthropic/ANTHROPIC_API_KEY; CLAUDE.md §0 (Gemini) wins.
 Known false-PASS path (documented, abstention P12): periods partly outside the data range compute over
 the rows present; V2 engine TODO queries min/max of time_column and abstains no_data. G7 (year rankings
-withheld as no_data) is the stopgap. COUNT DISTINCT metrics (c1) deferred.
+withheld as no_data) is the stopgap. COUNT DISTINCT metrics (c1) deferred; the sweep flags "27 states".
