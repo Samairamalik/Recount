@@ -1,0 +1,12 @@
+{
+  "model": "gemini-3.1-flash-lite",
+  "prompt_sha256": "59a8f3d3fceb2f5b57339cbdf80afe2421c0a8d465c59b1fe9e771da78081f9d",
+  "artifact_sha256": "7ad9e51f54e0cff1abebf2d35776ca3d7df6a6c03d6ef3081e9ae43ff8a414ae",
+  "schema_sha256": "26b412fbcd12a98bfe5d548acf70c1ea54eaefeeceac4ea0b70b10de43499263",
+  "responses": [
+    "{\n  \"faithful\": false,\n  \"problems\": [\n    {\n      \"span\": \"order count fell by 41.47%\",\n      \"reason\": \"The order count in the fourth quarter (17,280) increased compared to the third quarter (12,215), it did not fall.\"\n    }\n  ]\n}"
+  ],
+  "latency_s": [
+    3.374
+  ]
+}

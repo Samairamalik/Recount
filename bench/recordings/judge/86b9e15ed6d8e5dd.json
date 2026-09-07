@@ -1,0 +1,12 @@
+{
+  "model": "gemini-3.1-flash-lite",
+  "prompt_sha256": "59a8f3d3fceb2f5b57339cbdf80afe2421c0a8d465c59b1fe9e771da78081f9d",
+  "artifact_sha256": "86b9e15ed6d8e5ddd489c0ff7b744e3a72172759234d12f0dbfff6dd9d2c7a57",
+  "schema_sha256": "26b412fbcd12a98bfe5d548acf70c1ea54eaefeeceac4ea0b70b10de43499263",
+  "responses": [
+    "{\n  \"faithful\": false,\n  \"problems\": [\n    {\n      \"span\": \"Rio de Janeiro followed closely in third place.\",\n      \"reason\": \"The report states Rio de Janeiro is in third place, but the summary data shows Rio de Janeiro is ranked 2nd by orders and 2nd by revenue.\"\n    }\n  ]\n}"
+  ],
+  "latency_s": [
+    3.879
+  ]
+}

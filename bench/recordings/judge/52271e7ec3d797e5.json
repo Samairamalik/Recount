@@ -1,0 +1,12 @@
+{
+  "model": "gemini-3.1-flash-lite",
+  "prompt_sha256": "59a8f3d3fceb2f5b57339cbdf80afe2421c0a8d465c59b1fe9e771da78081f9d",
+  "artifact_sha256": "52271e7ec3d797e5c794e19973ca746f36ee6a68288b2e23f164ba60a31cf093",
+  "schema_sha256": "26b412fbcd12a98bfe5d548acf70c1ea54eaefeeceac4ea0b70b10de43499263",
+  "responses": [
+    "{\n  \"faithful\": false,\n  \"problems\": [\n    {\n      \"span\": \"206,144.81\",\n      \"reason\": \"The revenue for Santa Catarina is listed as 260,144.81 in the summary, not 206,144.81.\"\n    }\n  ]\n}"
+  ],
+  "latency_s": [
+    2.164
+  ]
+}

@@ -57,7 +57,8 @@
       "fabricated_metric",
       "rounding_drift",
       "instruction_in_data"
-    ]
+    ],
+    "clean_spans": "F4 (docs/benchmark.md): labels whose report.md span does not occur in report_clean.md carry `clean_span`: the six corrupted claims plus c42, whose verb changed when the spike split c41's sentence."
   },
   "claims": [
     {
@@ -394,6 +395,7 @@
         "unit": "currency",
         "period": "2017-Q3"
       },
+      "clean_span": "generating 1,913,208.93 in gross revenue",
       "expected_verdict": "FAIL",
       "true_value": 1913208.93,
       "true_value_sql": "SELECT ROUND(SUM(revenue), 2) FROM o WHERE QUARTER(order_date) = 3",
@@ -514,6 +516,7 @@
         "baseline_period": "2017-Q3",
         "direction": "decrease"
       },
+      "clean_span": "Fourth-quarter revenue increased by 43.61% over the prior quarter",
       "expected_verdict": "FAIL",
       "true_value": 43.61,
       "true_value_sql": "SELECT 100.0*(SUM(CASE WHEN QUARTER(order_date)=4 THEN revenue ELSE 0 END) - SUM(CASE WHEN QUARTER(order_date)=3 THEN revenue ELSE 0 END)) / SUM(CASE WHEN QUARTER(order_date)=3 THEN revenue ELSE 0 END) FROM o",
@@ -548,6 +551,7 @@
         "baseline_period": "2017-Q3",
         "direction": "increase"
       },
+      "clean_span": "order count expanded by 41.47%",
       "expected_verdict": "FAIL",
       "true_value": 41.4654,
       "true_value_sql": "SELECT 100.0*(SUM(CASE WHEN QUARTER(order_date)=4 THEN 1 ELSE 0 END) - SUM(CASE WHEN QUARTER(order_date)=3 THEN 1 ELSE 0 END)) / SUM(CASE WHEN QUARTER(order_date)=3 THEN 1 ELSE 0 END) FROM o",
@@ -815,6 +819,7 @@
         "rank": 3,
         "group_by": "state"
       },
+      "clean_span": "Minas Gerais followed closely in third place",
       "expected_verdict": "FAIL",
       "true_value": [
         [
@@ -857,6 +862,7 @@
         "period": "2017",
         "subject": "Minas Gerais"
       },
+      "clean_span": "capturing a 12.07% order share",
       "expected_verdict": "PASS",
       "true_value": 12.0659,
       "true_value_sql": "SELECT 100.0 * (SELECT COUNT(*) FROM o WHERE state = 'MG') / (SELECT COUNT(*) FROM o)",
@@ -908,6 +914,7 @@
         "period": "2017",
         "subject": "Minas Gerais"
       },
+      "clean_span": "supported by an average delivery time of 12.08 days",
       "expected_verdict": "FAIL",
       "true_value": 12.0765,
       "true_value_sql": "SELECT ROUND(AVG(delivery_days), 4) FROM o WHERE state = 'MG'",
@@ -1061,6 +1068,7 @@
         "period": "2017",
         "subject": "Santa Catarina"
       },
+      "clean_span": "Santa Catarina captured a 3.81% share of total order volume",
       "expected_verdict": "FAIL",
       "true_value": 3.8063,
       "true_value_sql": "SELECT 100.0 * (SELECT COUNT(*) FROM o WHERE state = 'SC') / (SELECT COUNT(*) FROM o)",

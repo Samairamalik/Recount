@@ -1,0 +1,12 @@
+{
+  "model": "gemini-3.1-flash-lite",
+  "prompt_sha256": "59a8f3d3fceb2f5b57339cbdf80afe2421c0a8d465c59b1fe9e771da78081f9d",
+  "artifact_sha256": "63fbf061fe1066ecc32ea8cb644f0ffb0eb8c282c632f65da7cde981ab84ffa1",
+  "schema_sha256": "26b412fbcd12a98bfe5d548acf70c1ea54eaefeeceac4ea0b70b10de43499263",
+  "responses": [
+    "{\n  \"faithful\": false,\n  \"problems\": [\n    {\n      \"span\": \"representing roughly two-fifths of all orders at 39.31%\",\n      \"reason\": \"The report states 39.31% is roughly two-fifths (40%), but the summary explicitly lists the order share as 39.3087%, which is more accurately represented as 39.31% but the claim of 'two-fifths' is an imprecise characterization of the specific data point provided.\"\n    }\n  ]\n}"
+  ],
+  "latency_s": [
+    1.536
+  ]
+}

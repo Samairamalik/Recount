@@ -1,8 +1,13 @@
-# Extraction eval (Stage 4)
+# Extraction eval (Stage 4, with a Stage 5 addendum)
 
 The numbers below are what the extractor measured against the 57 hand labels, whatever
 they are. Re-runnable keyless: `uv run pytest tests/extract/test_eval.py` replays the
 recording in `tests/fixtures/extract/report.json`; the test pins every number here.
+
+**Stage 5 note.** The Stage 4 sections record the Stage 4 recordings. Both recordings were
+re-made on 2026-09-07 after the wire schema changed (every key required-but-nullable,
+docs/benchmark.md §6 changelog 1); the current pinned numbers for both models are in the
+addendum at the end, and that is where the benchmark's extraction model is stated.
 
 ## Method
 
@@ -99,6 +104,58 @@ extractor's one numeric miss into a visible line rather than a silent gap; with
 abstentions are the vague growth claims, "remained stable" (unchanged), "well under two
 weeks" (no baseline), "took the lead" (unsupported rank change) and "roughly
 two-fifths" (no stated share), each with the reason the abstention table prescribes.
+
+## Stage 5 addendum: the model-switch gate, a schema finding, and two models like for like
+
+The dashboard limits for the default pin `gemini-3.6-flash` (5 RPM / 20 RPD) could not carry
+the benchmark's ~200 calls, so the owner ruled a switch to `gemini-3.1-flash-lite`
+(15 RPM / 500 RPD) behind an honesty gate: re-run this mini-eval live on the lite model and
+proceed only at recall ≥ 0.85 with precision 1.0.
+
+**The gate failed first, and the failure was a finding.** On the Stage 4 wire schema the
+lite model returned 55 wire objects for the 57 labels, every one with the right type and a
+verbatim span, and then omitted keys the schema listed as optional: `subject` on 55/55,
+`value` and `direction` on 7/7 growth claims, `period` on 5/5 rankings, `value` on 3/3
+comparisons. Pydantic rejected 21 as `invalid_claim` ("Field required"), and the 34 accepted
+point values carried no subject, so 17 state-level figures were verified against the
+national total: 17 false flags, 0 false accepts, recall 0.5965. The Stage 0 failure mode
+(subject as the sole carrier of the entity) had come back through a different door: a
+JSON-schema-constrained output only promises the keys it is told are required.
+
+**The change (changelog 1):** every wire key is now required; the non-`WIRE_REQUIRED` ones
+stay nullable, so a model must write an explicit null and the unchanged post-validation
+rejects it where the type needs a value. Both Stage 4 recordings were re-made on the
+default model so the two models are measured on the same schema.
+
+| | 3.6-flash, Stage 4 schema | 3.6-flash, required schema | flash-lite, Stage 4 schema | flash-lite, required schema |
+|---|---|---|---|---|
+| claims accepted / rejected | 62 / 0 | 63 / 0 | 34 / 21 | 51 / 4 (`foreign_field`) |
+| matched · merged · missed · spurious | 55 · 0 · 2 · 7 | 55 · 0 · 2 · 8 | 34 · 0 · 23 · 0 | 51 · 1 · 5 · 0 |
+| **recall** | 0.9649 | **0.9649** | 0.5965 | **0.8947** |
+| **precision** | 0.8871 | **0.873** | 1.0 | **1.0** |
+| span validity | 1.0 | 1.0 | 1.0 | 1.0 |
+| subject binding | 28/28 | 28/28 | 0/18 | 28/28 |
+| metric binding | 54/55 | 55/55 | 34/34 | 45/51 |
+| verdict agreement (agree / false accept / false flag / other) | 54 / 0 / 0 / 1 | 54 / 0 / 0 / 1 | 17 / 0 / 17 / 0 | 47 / 0 / 0 / 4 |
+| sweep flagged the numeric misses | 1/1 | 1/1 | 13/13 | 4/4 |
+| latency of the one call | n/a | n/a | 10.8 s | 19.2 s |
+
+Gate re-applied on the required schema: recall 0.8947 ≥ 0.85, precision 1.0 → the benchmark
+runs on `gemini-3.1-flash-lite`, extractor and judge alike. **The default pin in
+`extract/client.py` is unchanged (`gemini-3.6-flash`)**; the benchmark states its own model.
+
+What the lite model still does differently, all visible in the pinned numbers: it merges
+c28 into a neighbour; it misses the three "delivery time … days" point values that share a
+sentence with a growth or ranking claim (c18, c24, c29; every one flagged by the sweep);
+it names ranking metrics in words the config does not alias ("fulfillment speed"), so four
+rankings abstain `schema_gap` where the labels expect a verdict, including c41, the
+spike's wrong_ranking corruption; and it writes non-null `direction` on some point values,
+which the foreign-field check rejects (their numbers fall to the sweep). The default
+model's recall is unchanged by the schema change; its precision moved from 0.8871 to
+0.873 because it returned one more true-but-unlabeled claim.
+
+End-to-end on the clean report with the re-made default-model recording: 61 claims
+accepted, 0 rejected, **56 PASS / 5 UNVERIFIABLE / 0 FAIL** (Stage 4: 66 / 58 / 8 / 0).
 
 ## Caveats
 

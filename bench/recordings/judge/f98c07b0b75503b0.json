@@ -1,0 +1,12 @@
+{
+  "model": "gemini-3.1-flash-lite",
+  "prompt_sha256": "59a8f3d3fceb2f5b57339cbdf80afe2421c0a8d465c59b1fe9e771da78081f9d",
+  "artifact_sha256": "f98c07b0b75503b01642f12fdeb1db3677bbbf5b205d606e2c24b18df35fb9f3",
+  "schema_sha256": "26b412fbcd12a98bfe5d548acf70c1ea54eaefeeceac4ea0b70b10de43499263",
+  "responses": [
+    "{\n  \"faithful\": false,\n  \"problems\": [\n    {\n      \"span\": \"336,307.01\",\n      \"reason\": \"The revenue for Parana is listed as 336,300.71 in the summary, not 336,307.01.\"\n    }\n  ]\n}"
+  ],
+  "latency_s": [
+    2.041
+  ]
+}

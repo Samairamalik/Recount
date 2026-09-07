@@ -1,0 +1,12 @@
+{
+  "model": "gemini-3.1-flash-lite",
+  "prompt_sha256": "59a8f3d3fceb2f5b57339cbdf80afe2421c0a8d465c59b1fe9e771da78081f9d",
+  "artifact_sha256": "d02f6ac40183f7194bf8eac65a4555b520c37a0e1c06d782467ce541723ba4fc",
+  "schema_sha256": "26b412fbcd12a98bfe5d548acf70c1ea54eaefeeceac4ea0b70b10de43499263",
+  "responses": [
+    "{\n  \"faithful\": false,\n  \"problems\": [\n    {\n      \"span\": \"39.31%\",\n      \"reason\": \"The order share for Sao Paulo is 39.3087%, which rounds to 39.31%, but the report claims this represents 'roughly two-fifths' (40%) of all orders, which is a slightly inaccurate characterization.\"\n    },\n    {\n      \"span\": \"Minas Gerais followed closely in third place, capturing a 12.07% order share with 5,240 orders that generated 825,060.97 in revenue\",\n      \"reason\": \"The revenue for Minas Gerais is 825,060.95, not 825,060.97.\"\n    }\n  ]\n}"
+  ],
+  "latency_s": [
+    3.552
+  ]
+}

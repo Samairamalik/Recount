@@ -15,6 +15,7 @@ from recount.verify.policies import (
     check_ranking,
     check_share,
     half_ulp_tolerance,
+    stated_decimals,
 )
 
 _BASE = {"id": "t", "span": "s", "confidence": "high", "metric": "m", "period": "2017"}
@@ -66,6 +67,21 @@ def test_rounding_drift_is_caught_and_the_correct_rounding_passes() -> None:
     drift = check_point_value(_pv(41.52), 41.4654)
     assert drift.verdict == "FAIL" and drift.policy == "half_ulp"
     assert drift.delta == pytest.approx(-0.0546)
+
+
+def test_trailing_zeros_in_the_span_keep_their_precision() -> None:
+    """Benchmark finding F-1 (docs/benchmark.md §5b, changelog 2): "6.00%" arrives as the
+    float 6.0; the span says two decimals, so the tolerance is 0.005, not 0.5."""
+    assert stated_decimals(6.0, "capturing 6.00% of total orders") == 2
+    assert stated_decimals(12.1, "average delivery time of 12.10 days") == 2
+    assert stated_decimals(9.3, "just 9.3 days") == 1
+    assert stated_decimals(8984.0, "to reach 8,984 orders") == 0
+    assert stated_decimals(6.0, "no number here") == 0  # fallback: the float rule
+    assert half_ulp_tolerance(6.0, 2) == Decimal("0.005")
+    claim = PointValue(id="x", type="point_value", span="capturing 6.00% of total orders",
+                       confidence="high", metric="orders", value=6.0, period="2017")  # fmt: skip
+    r = check_point_value(claim, 5.9662)
+    assert r.verdict == "FAIL" and "tolerance 0.005" in r.detail
 
 
 def test_half_ulp_boundary_is_inclusive_and_exact() -> None:

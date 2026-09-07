@@ -1,0 +1,12 @@
+{
+  "model": "gemini-3.1-flash-lite",
+  "prompt_sha256": "59a8f3d3fceb2f5b57339cbdf80afe2421c0a8d465c59b1fe9e771da78081f9d",
+  "artifact_sha256": "22e2a9f3615268927c5199c1b3dcf969c89e31a5657015732b9030eb1e9296cc",
+  "schema_sha256": "26b412fbcd12a98bfe5d548acf70c1ea54eaefeeceac4ea0b70b10de43499263",
+  "responses": [
+    "{\n  \"faithful\": false,\n  \"problems\": [\n    {\n      \"span\": \"maintaining an average order value of 159.33\",\n      \"reason\": \"The average order value for the whole dataset is 159.38, not 159.33.\"\n    }\n  ]\n}"
+  ],
+  "latency_s": [
+    2.267
+  ]
+}

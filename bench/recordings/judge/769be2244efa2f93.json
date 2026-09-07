@@ -1,0 +1,12 @@
+{
+  "model": "gemini-3.1-flash-lite",
+  "prompt_sha256": "59a8f3d3fceb2f5b57339cbdf80afe2421c0a8d465c59b1fe9e771da78081f9d",
+  "artifact_sha256": "769be2244efa2f9343bd7d18ba001aff5e8a4b67b5b01047f72e64c2740ae6ff",
+  "schema_sha256": "26b412fbcd12a98bfe5d548acf70c1ea54eaefeeceac4ea0b70b10de43499263",
+  "responses": [
+    "{\n  \"faithful\": false,\n  \"problems\": [\n    {\n      \"span\": \"39.31%\",\n      \"reason\": \"The order share for Sao Paulo is 39.3087%, which rounds to 39.31%, but the report claims this represents 'roughly two-fifths' (40%) of all orders, which is a misleading characterization of the specific percentage provided.\"\n    },\n    {\n      \"span\": \"5.50%\",\n      \"reason\": \"The order share for Parana is 5.0474%, not 5.50%.\"\n    }\n  ]\n}"
+  ],
+  "latency_s": [
+    2.462
+  ]
+}

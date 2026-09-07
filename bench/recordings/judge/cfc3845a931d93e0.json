@@ -1,0 +1,12 @@
+{
+  "model": "gemini-3.1-flash-lite",
+  "prompt_sha256": "59a8f3d3fceb2f5b57339cbdf80afe2421c0a8d465c59b1fe9e771da78081f9d",
+  "artifact_sha256": "cfc3845a931d93e0b22b3927d92d7fc94368afebf77d7d5ebf6ad11fa2575743",
+  "schema_sha256": "26b412fbcd12a98bfe5d548acf70c1ea54eaefeeceac4ea0b70b10de43499263",
+  "responses": [
+    "{\n  \"faithful\": false,\n  \"problems\": [\n    {\n      \"span\": \"representing roughly two-fifths of all orders at 39.31%\",\n      \"reason\": \"The report states 39.31% is roughly two-fifths, but 39.31% is actually closer to two-fifths (40%) than the report implies by using the word 'roughly' in a way that suggests it is an approximation of the exact figure provided.\"\n    }\n  ]\n}"
+  ],
+  "latency_s": [
+    2.714
+  ]
+}

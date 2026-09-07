@@ -1,0 +1,12 @@
+{
+  "model": "gemini-3.1-flash-lite",
+  "prompt_sha256": "59a8f3d3fceb2f5b57339cbdf80afe2421c0a8d465c59b1fe9e771da78081f9d",
+  "artifact_sha256": "b13e918dcdf6c39a56f19fb5d311128ad75d8d6db0b0438e2039035809772308",
+  "schema_sha256": "26b412fbcd12a98bfe5d548acf70c1ea54eaefeeceac4ea0b70b10de43499263",
+  "responses": [
+    "{\n  \"faithful\": false,\n  \"problems\": [\n    {\n      \"span\": \"39.31%\",\n      \"reason\": \"The report claims Santa Catarina captured a 39.31% share of total order volume, but the summary shows this value is 3.8063%.\"\n    }\n  ]\n}"
+  ],
+  "latency_s": [
+    1.728
+  ]
+}

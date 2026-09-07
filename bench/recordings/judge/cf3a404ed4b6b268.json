@@ -1,0 +1,12 @@
+{
+  "model": "gemini-3.1-flash-lite",
+  "prompt_sha256": "59a8f3d3fceb2f5b57339cbdf80afe2421c0a8d465c59b1fe9e771da78081f9d",
+  "artifact_sha256": "cf3a404ed4b6b268893700ba7b54a1a4f0d795863eb39d7d59cc9b272c9a19ef",
+  "schema_sha256": "26b412fbcd12a98bfe5d548acf70c1ea54eaefeeceac4ea0b70b10de43499263",
+  "responses": [
+    "{\n  \"faithful\": false,\n  \"problems\": [\n    {\n      \"span\": \"39.31%\",\n      \"reason\": \"The order share for Sao Paulo is 39.3087%, which rounds to 39.31%, but the report claims this represents 'roughly two-fifths' of all orders. Two-fifths is 40%, and while 39.31% is close, the phrasing 'roughly two-fifths' is imprecise and potentially misleading given the exact figure is available.\"\n    }\n  ]\n}"
+  ],
+  "latency_s": [
+    2.07
+  ]
+}

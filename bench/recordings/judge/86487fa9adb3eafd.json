@@ -1,0 +1,12 @@
+{
+  "model": "gemini-3.1-flash-lite",
+  "prompt_sha256": "59a8f3d3fceb2f5b57339cbdf80afe2421c0a8d465c59b1fe9e771da78081f9d",
+  "artifact_sha256": "86487fa9adb3eafdf2bb4fbdd58549af2f41242f808c31ba20b0c4c445ce8040",
+  "schema_sha256": "26b412fbcd12a98bfe5d548acf70c1ea54eaefeeceac4ea0b70b10de43499263",
+  "responses": [
+    "{\n  \"faithful\": false,\n  \"problems\": [\n    {\n      \"span\": \"39.31%\",\n      \"reason\": \"The summary states the order share for Sao Paulo is 39.3087%, which rounds to 39.31%, but the report claims this represents 'roughly two-fifths' of all orders, which is 40%. While 39.31% is close, the phrasing 'roughly two-fifths' is imprecise given the exact percentage provided.\"\n    },\n    {\n      \"span\": \"12.07%\",\n      \"reason\": \"The summary states the order share for Minas Gerais is 12.0659%, which rounds to 12.07%, but the report claims it captured a 12.07% order share with 5,204 orders. 5,204 divided by the total 43,428 is 11.98%, not 12.07%.\"\n    }\n  ]\n}"
+  ],
+  "latency_s": [
+    1.8
+  ]
+}

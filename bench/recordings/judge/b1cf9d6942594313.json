@@ -1,0 +1,12 @@
+{
+  "model": "gemini-3.1-flash-lite",
+  "prompt_sha256": "59a8f3d3fceb2f5b57339cbdf80afe2421c0a8d465c59b1fe9e771da78081f9d",
+  "artifact_sha256": "b1cf9d6942594313754650acb816d7b12b09d7ce1b800d0345115cc17963e5df",
+  "schema_sha256": "26b412fbcd12a98bfe5d548acf70c1ea54eaefeeceac4ea0b70b10de43499263",
+  "responses": [
+    "{\n  \"faithful\": false,\n  \"problems\": [\n    {\n      \"span\": \"roughly two-fifths of all orders at 39.31%\",\n      \"reason\": \"Two-fifths is 40%, which is not a correct rounding of 39.31%.\"\n    }\n  ]\n}"
+  ],
+  "latency_s": [
+    1.462
+  ]
+}

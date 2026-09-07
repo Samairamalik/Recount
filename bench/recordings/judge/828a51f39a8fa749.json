@@ -1,0 +1,12 @@
+{
+  "model": "gemini-3.1-flash-lite",
+  "prompt_sha256": "59a8f3d3fceb2f5b57339cbdf80afe2421c0a8d465c59b1fe9e771da78081f9d",
+  "artifact_sha256": "828a51f39a8fa7497721a4717cd8207e6370760fdb1162bee526aea8d5cc8b38",
+  "schema_sha256": "26b412fbcd12a98bfe5d548acf70c1ea54eaefeeceac4ea0b70b10de43499263",
+  "responses": [
+    "{\n  \"faithful\": false,\n  \"problems\": [\n    {\n      \"span\": \"maintaining an average order value of 159.38\",\n      \"reason\": \"The average order value for the whole dataset is 159.3796, which rounds to 159.38, but the report claims this was maintained throughout the year, whereas the quarterly average order values fluctuate (164.29, 161.14, 156.63, 159.00).\"\n    },\n    {\n      \"span\": \"Santa Catarina followed closely in third place.\",\n      \"reason\": \"The report states Santa Catarina is in third place, but the data shows Santa Catarina (SC) is ranked 6th by orders and 7th by revenue, while Minas Gerais (MG) is ranked 3rd by both metrics.\"\n    }\n  ]\n}"
+  ],
+  "latency_s": [
+    2.839
+  ]
+}

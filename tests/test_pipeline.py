@@ -22,7 +22,10 @@ def test_clean_report_end_to_end_has_no_fail_and_no_rejection() -> None:
     ex = result.extraction
     assert ex.rejected == ()
     assert [v.claim_id for v in result.verdicts] == [c.id for c in ex.claims]
-    assert Counter(v.verdict for v in result.verdicts) == {"PASS": 58, "UNVERIFIABLE": 8}
+    # Stage 4 recording: 66 claims, 58 PASS / 8 UNVERIFIABLE. Re-recorded in Stage 5 after
+    # the wire schema made every key required (docs/benchmark.md §6, changelog 1).
+    assert len(ex.claims) == 61
+    assert Counter(v.verdict for v in result.verdicts) == {"PASS": 56, "UNVERIFIABLE": 5}
     assert {v.abstain_reason.value for v in result.verdicts if v.abstain_reason} == {
         "ambiguous",
         "unsupported_claim_type",

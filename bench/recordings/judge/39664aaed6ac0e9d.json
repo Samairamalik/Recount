@@ -1,0 +1,12 @@
+{
+  "model": "gemini-3.1-flash-lite",
+  "prompt_sha256": "59a8f3d3fceb2f5b57339cbdf80afe2421c0a8d465c59b1fe9e771da78081f9d",
+  "artifact_sha256": "39664aaed6ac0e9da920703f75b9317cd1680d62564c00ce41e8a1f068d43c3b",
+  "schema_sha256": "26b412fbcd12a98bfe5d548acf70c1ea54eaefeeceac4ea0b70b10de43499263",
+  "responses": [
+    "{\n  \"faithful\": false,\n  \"problems\": [\n    {\n      \"span\": \"39.31%\",\n      \"reason\": \"The order share for Sao Paulo is 39.3087%, which rounds to 39.31%, but the report claims this represents 'roughly two-fifths' (40%) of all orders, which is a misleading characterization of the specific percentage provided.\"\n    },\n    {\n      \"span\": \"13.74% of total orders\",\n      \"reason\": \"The summary shows Rio de Janeiro's order share is 13.7423%, which rounds to 13.74%, but the report claims this is the second position overall, which is correct, but the text implies this is the share of total orders nationwide, which is correct, however, the report fails to mention that the ranking is based on orders, not revenue.\"\n    },\n    {\n      \"span\": \"capturing 3.81% of total orders\",\n      \"reason\": \"The summary shows Rio Grande do Sul's order share is 5.9662%, not 3.81%.\"\n    },\n    {\n      \"span\": \"Santa Catarina captured a 3.81% share of total order volume\",\n      \"reason\": \"The summary shows Santa Catarina's order share is 3.8063%, which rounds to 3.81%, but the report previously attributed this same 3.81% figure to Rio Grande do Sul.\"\n    }\n  ]\n}"
+  ],
+  "latency_s": [
+    3.302
+  ]
+}

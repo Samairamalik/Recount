@@ -1,0 +1,12 @@
+{
+  "model": "gemini-3.1-flash-lite",
+  "prompt_sha256": "59a8f3d3fceb2f5b57339cbdf80afe2421c0a8d465c59b1fe9e771da78081f9d",
+  "artifact_sha256": "21e837273b813600b3e645eefbdd44aaee079a6c161a50aace7630485b2d253a",
+  "schema_sha256": "26b412fbcd12a98bfe5d548acf70c1ea54eaefeeceac4ea0b70b10de43499263",
+  "responses": [
+    "{\n  \"faithful\": false,\n  \"problems\": [\n    {\n      \"span\": \"representing roughly two-fifths of all orders at 5.97%\",\n      \"reason\": \"The order share for Sao Paulo is 39.31%, not 5.97%. 5.97% is the order share for Rio Grande do Sul.\"\n    }\n  ]\n}"
+  ],
+  "latency_s": [
+    3.316
+  ]
+}

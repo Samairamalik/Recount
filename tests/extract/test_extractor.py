@@ -58,7 +58,9 @@ def test_wire_schema_is_the_union_of_the_claim_models() -> None:
     for cls in (PointValue, Growth, Comparison, Ranking, Share):
         expected |= set(cls.model_fields)
     assert set(props) == expected
-    assert WIRE_SCHEMA["items"]["required"] == list(WIRE_REQUIRED)
+    # every key is required since Stage 5 (changelog 1): a model must write null, never omit
+    assert WIRE_SCHEMA["items"]["required"] == list(props)
+    assert set(WIRE_REQUIRED) < set(props)
     assert props["type"]["enum"] == ["point_value", "growth", "comparison", "ranking", "share"]
 
 

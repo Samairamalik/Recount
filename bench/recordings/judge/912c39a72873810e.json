@@ -1,0 +1,12 @@
+{
+  "model": "gemini-3.1-flash-lite",
+  "prompt_sha256": "59a8f3d3fceb2f5b57339cbdf80afe2421c0a8d465c59b1fe9e771da78081f9d",
+  "artifact_sha256": "912c39a72873810e73f8f25f475f5d9baa795d8d00efe17dbcaf8908cae2528c",
+  "schema_sha256": "26b412fbcd12a98bfe5d548acf70c1ea54eaefeeceac4ea0b70b10de43499263",
+  "responses": [
+    "{\n  \"faithful\": false,\n  \"problems\": [\n    {\n      \"span\": \"39.31%\",\n      \"reason\": \"The order share for Sao Paulo is 39.3087%, which rounds to 39.31%, but the report claims it represents 'roughly two-fifths' (40%) of all orders, which is a slightly inaccurate characterization.\"\n    },\n    {\n      \"span\": \"capturing 5.97% of total refunds\",\n      \"reason\": \"The summary provides order share, not refund share, and the dataset does not contain information about refunds.\"\n    }\n  ]\n}"
+  ],
+  "latency_s": [
+    1.666
+  ]
+}

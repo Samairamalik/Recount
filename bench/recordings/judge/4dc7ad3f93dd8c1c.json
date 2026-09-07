@@ -1,0 +1,12 @@
+{
+  "model": "gemini-3.1-flash-lite",
+  "prompt_sha256": "59a8f3d3fceb2f5b57339cbdf80afe2421c0a8d465c59b1fe9e771da78081f9d",
+  "artifact_sha256": "4dc7ad3f93dd8c1c975064273f4fc66e71bea816d9260043f8a5682894c4d99f",
+  "schema_sha256": "26b412fbcd12a98bfe5d548acf70c1ea54eaefeeceac4ea0b70b10de43499263",
+  "responses": [
+    "{\n  \"faithful\": false,\n  \"problems\": [\n    {\n      \"span\": \"Rio de Janeiro secured the second position overall\",\n      \"reason\": \"The summary indicates Rio de Janeiro is ranked 2nd by revenue and 2nd by orders, but the report claims it is the second position overall without specifying the metric, and the summary does not provide an 'overall' rank.\"\n    },\n    {\n      \"span\": \"Minas Gerais followed closely in third place\",\n      \"reason\": \"The summary indicates Minas Gerais is ranked 3rd by revenue and 3rd by orders, but the report claims it is in third place overall without specifying the metric, and the summary does not provide an 'overall' rank.\"\n    }\n  ]\n}"
+  ],
+  "latency_s": [
+    1.391
+  ]
+}

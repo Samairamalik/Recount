@@ -1,0 +1,12 @@
+{
+  "model": "gemini-3.1-flash-lite",
+  "prompt_sha256": "59a8f3d3fceb2f5b57339cbdf80afe2421c0a8d465c59b1fe9e771da78081f9d",
+  "artifact_sha256": "f6d24563434eded6c604656bda873b7fcde1ddbbfdad1960d2723af95d817cdf",
+  "schema_sha256": "26b412fbcd12a98bfe5d548acf70c1ea54eaefeeceac4ea0b70b10de43499263",
+  "responses": [
+    "{\n  \"faithful\": false,\n  \"problems\": [\n    {\n      \"span\": \"revenue drop of 78.06%\",\n      \"reason\": \"The summary indicates a revenue increase of 78.06% quarter-over-quarter, not a drop.\"\n    }\n  ]\n}"
+  ],
+  "latency_s": [
+    1.961
+  ]
+}

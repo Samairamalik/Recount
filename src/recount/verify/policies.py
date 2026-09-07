@@ -11,6 +11,7 @@ No DuckDB here. Every branch is enumerated so it can be explained unaided:
                  unchanged -> ambiguous, always
   ranking displaced set -> UNVERIFIABLE unsupported_claim_type (rank change; abstention G10)
   half_ulp: PASS iff |stated - computed| <= 0.5 * 10^-d, d = decimals in the stated number
+            as written in the span ("6.00%" -> 2), else as the float reads (changelog 2)
   rank:     PASS iff the subject's SQL RANK() equals the claimed rank (ties share a rank)
 
 NULLs: AVG excludes NULLs and SUM ignores them (SQL semantics); COUNT(*) counts every
@@ -19,8 +20,9 @@ row. The verdict reports n_rows and n_used so the denominator is visible.
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 from typing import Literal
 
 from recount.claims import AbstainReason, Comparison, Growth, PointValue, Ranking, Share
@@ -59,23 +61,43 @@ def _abstain(reason: AbstainReason, detail: str, claimed: float | None = None) -
 # --------------------------------------------------------------------- half_ulp
 
 
-def half_ulp_tolerance(stated: float) -> Decimal:
-    """0.5 * 10^-d, where d is the number of decimals in the stated number as written.
+_NUMBER = re.compile(r"\d[\d,]*(?:\.\d+)?")
 
-    Uses the shortest round-trip repr, so 9.3 has d=1 (tol 0.05) and 43428 has d=0
-    (tol 0.5, which is exact for integer-valued truths). A float carries no trailing
-    zeros, so an integral value (13.0) is treated as written with 0 decimals.
+
+def stated_decimals(stated: float, span: str | None = None) -> int:
+    """Decimals of the stated number *as written*.
+
+    Read off the verbatim span first (Stage 5, docs/benchmark.md changelog 2): the
+    numeric token whose value equals `stated` carries the written precision, so "6.00%"
+    has d=2 even though the float 6.0 cannot say so. Falls back to the shortest
+    round-trip repr when no token in the span matches (9.3 -> d=1, 43428 -> d=0); a
+    float carries no trailing zeros, so 13.0 then reads as 0 decimals. The span is
+    schema-validated Claim text, the one door through which artifact text may reach a
+    verdict.
     """
-    exponent = Decimal(str(stated)).normalize().as_tuple().exponent
-    decimals = max(0, -exponent) if isinstance(exponent, int) else 0
-    return Decimal("0.5").scaleb(-decimals)
+    target = Decimal(str(stated))
+    for m in _NUMBER.finditer(span or ""):
+        token = m[0]
+        try:
+            if Decimal(token.replace(",", "")) == target:
+                return len(token.partition(".")[2])
+        except InvalidOperation:
+            continue
+    exponent = target.normalize().as_tuple().exponent
+    return max(0, -exponent) if isinstance(exponent, int) else 0
+
+
+def half_ulp_tolerance(stated: float, decimals: int | None = None) -> Decimal:
+    """0.5 * 10^-d, d = decimals in the stated number as written (`stated_decimals`)."""
+    d = stated_decimals(stated) if decimals is None else decimals
+    return Decimal("0.5").scaleb(-d)
 
 
 def _half_ulp(
-    stated: float, computed: float, *, signed_computed: float | None = None
+    stated: float, computed: float, *, signed_computed: float | None = None, span: str = ""
 ) -> PolicyResult:
     """Compare in Decimal so the boundary case is exact, not float-subtraction noise."""
-    tol = half_ulp_tolerance(stated)
+    tol = half_ulp_tolerance(stated, stated_decimals(stated, span))
     delta = Decimal(str(computed)) - Decimal(str(stated))
     ok = abs(delta) <= tol
     return PolicyResult(
@@ -96,7 +118,7 @@ def check_point_value(claim: PointValue, computed: float | None) -> PolicyResult
         return _abstain(AbstainReason.AMBIGUOUS, "no stated value to compare against")
     if computed is None:
         return _abstain(AbstainReason.NO_DATA, "no rows in this slice", claim.value)
-    return _half_ulp(claim.value, computed)
+    return _half_ulp(claim.value, computed, span=claim.span)
 
 
 def check_share(claim: Share, share_pct: float | None) -> PolicyResult:
@@ -104,7 +126,7 @@ def check_share(claim: Share, share_pct: float | None) -> PolicyResult:
         return _abstain(AbstainReason.AMBIGUOUS, "no stated share to compare against")
     if share_pct is None:
         return _abstain(AbstainReason.NO_DATA, "the whole is empty or zero", claim.value)
-    return _half_ulp(claim.value, share_pct)
+    return _half_ulp(claim.value, share_pct, span=claim.span)
 
 
 def check_growth(claim: Growth, pct_change: float | None) -> PolicyResult:
@@ -124,7 +146,7 @@ def check_growth(claim: Growth, pct_change: float | None) -> PolicyResult:
             claimed_value=claim.value,
             computed_value=pct_change,
         )
-    return _half_ulp(claim.value, abs(pct_change), signed_computed=pct_change)
+    return _half_ulp(claim.value, abs(pct_change), signed_computed=pct_change, span=claim.span)
 
 
 def check_comparison(
@@ -174,7 +196,7 @@ def check_comparison(
             ),
             computed_value=diff,
         )
-    return _half_ulp(claim.value, abs(diff), signed_computed=diff)
+    return _half_ulp(claim.value, abs(diff), signed_computed=diff, span=claim.span)
 
 
 def check_ranking(claim: Ranking, subject_key: str, rows: tuple[RankRow, ...]) -> PolicyResult:

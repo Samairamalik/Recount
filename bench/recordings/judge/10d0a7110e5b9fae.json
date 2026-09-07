@@ -1,0 +1,12 @@
+{
+  "model": "gemini-3.1-flash-lite",
+  "prompt_sha256": "59a8f3d3fceb2f5b57339cbdf80afe2421c0a8d465c59b1fe9e771da78081f9d",
+  "artifact_sha256": "10d0a7110e5b9fae250a024b3187e520cb278bb5e31e612de74a70bedb3581c2",
+  "schema_sha256": "26b412fbcd12a98bfe5d548acf70c1ea54eaefeeceac4ea0b70b10de43499263",
+  "responses": [
+    "{\n  \"faithful\": false,\n  \"problems\": [\n    {\n      \"span\": \"5,968 cancellations\",\n      \"reason\": \"The summary indicates 5,968 orders for Rio de Janeiro, not cancellations.\"\n    }\n  ]\n}"
+  ],
+  "latency_s": [
+    2.652
+  ]
+}

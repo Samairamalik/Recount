@@ -1,0 +1,12 @@
+{
+  "model": "gemini-3.1-flash-lite",
+  "prompt_sha256": "59a8f3d3fceb2f5b57339cbdf80afe2421c0a8d465c59b1fe9e771da78081f9d",
+  "artifact_sha256": "32d4cbafe0da29b732e70ecaf6904e919d4e46d1959854cba67dede18ca8229e",
+  "schema_sha256": "26b412fbcd12a98bfe5d548acf70c1ea54eaefeeceac4ea0b70b10de43499263",
+  "responses": [
+    "{\n  \"faithful\": false,\n  \"problems\": [\n    {\n      \"span\": \"12.07%\",\n      \"reason\": \"The summary indicates that Parana (PR) has an order share of 5.0474%, not 12.07%.\"\n    }\n  ]\n}"
+  ],
+  "latency_s": [
+    1.457
+  ]
+}

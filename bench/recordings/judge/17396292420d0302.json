@@ -1,0 +1,12 @@
+{
+  "model": "gemini-3.1-flash-lite",
+  "prompt_sha256": "59a8f3d3fceb2f5b57339cbdf80afe2421c0a8d465c59b1fe9e771da78081f9d",
+  "artifact_sha256": "17396292420d03029099673f5e7a6c5b639a5c8a99a3766887f2de5e94fe97be",
+  "schema_sha256": "26b412fbcd12a98bfe5d548acf70c1ea54eaefeeceac4ea0b70b10de43499263",
+  "responses": [
+    "{\n  \"faithful\": false,\n  \"problems\": [\n    {\n      \"span\": \"order count contracted by 41.47% to peak at 17,280 orders\",\n      \"reason\": \"The order count for the fourth quarter was 17,280, which is an increase of 41.47% over the third quarter, not a contraction.\"\n    }\n  ]\n}"
+  ],
+  "latency_s": [
+    1.65
+  ]
+}

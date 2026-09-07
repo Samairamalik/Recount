@@ -1,0 +1,12 @@
+{
+  "model": "gemini-3.1-flash-lite",
+  "prompt_sha256": "59a8f3d3fceb2f5b57339cbdf80afe2421c0a8d465c59b1fe9e771da78081f9d",
+  "artifact_sha256": "4dc788f5199c10b6842d11b04dac1d788fd3577a02d787515d7884b32f911dc8",
+  "schema_sha256": "26b412fbcd12a98bfe5d548acf70c1ea54eaefeeceac4ea0b70b10de43499263",
+  "responses": [
+    "{\n  \"faithful\": false,\n  \"problems\": [\n    {\n      \"span\": \"4,228,002.62\",\n      \"reason\": \"The revenue for Sao Paulo is listed as 2,428,002.62 in the summary, not 4,228,002.62.\"\n    }\n  ]\n}"
+  ],
+  "latency_s": [
+    1.527
+  ]
+}

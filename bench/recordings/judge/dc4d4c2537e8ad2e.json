@@ -1,0 +1,12 @@
+{
+  "model": "gemini-3.1-flash-lite",
+  "prompt_sha256": "59a8f3d3fceb2f5b57339cbdf80afe2421c0a8d465c59b1fe9e771da78081f9d",
+  "artifact_sha256": "dc4d4c2537e8ad2ed3791b81bf729a3cf9303382063d2a87b609846ef772bceb",
+  "schema_sha256": "26b412fbcd12a98bfe5d548acf70c1ea54eaefeeceac4ea0b70b10de43499263",
+  "responses": [
+    "{\n  \"faithful\": false,\n  \"problems\": [\n    {\n      \"span\": \"39.31%\",\n      \"reason\": \"The order share for Sao Paulo is 39.3087%, which rounds to 39.31%, but the report claims it represents 'roughly two-fifths' (40%) of all orders, which is a misleading characterization.\"\n    },\n    {\n      \"span\": \"Rio de Janeiro secured the second position overall\",\n      \"reason\": \"While Rio de Janeiro is second in order volume, it is not the second position overall in terms of revenue; it is second in revenue, but the report implies a general ranking that is ambiguous.\"\n    },\n    {\n      \"span\": \"Minas Gerais followed closely in third place\",\n      \"reason\": \"Minas Gerais is third in order volume and third in revenue, but the report incorrectly states its revenue as 825,060.95, which is the revenue for Rio de Janeiro, not Minas Gerais.\"\n    }\n  ]\n}"
+  ],
+  "latency_s": [
+    2.911
+  ]
+}

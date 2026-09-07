@@ -1,0 +1,12 @@
+{
+  "model": "gemini-3.1-flash-lite",
+  "prompt_sha256": "59a8f3d3fceb2f5b57339cbdf80afe2421c0a8d465c59b1fe9e771da78081f9d",
+  "artifact_sha256": "618ee3133f50c59170376e9ecb0265ab6bc41b42196b58e9ded5bb3a53743d72",
+  "schema_sha256": "26b412fbcd12a98bfe5d548acf70c1ea54eaefeeceac4ea0b70b10de43499263",
+  "responses": [
+    "{\n  \"faithful\": false,\n  \"problems\": [\n    {\n      \"span\": \"Minas Gerais followed closely in fifth place\",\n      \"reason\": \"The summary data indicates that Minas Gerais is ranked 3rd by revenue and 3rd by orders, not 5th.\"\n    }\n  ]\n}"
+  ],
+  "latency_s": [
+    1.285
+  ]
+}

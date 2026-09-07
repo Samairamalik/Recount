@@ -1,0 +1,12 @@
+{
+  "model": "gemini-3.1-flash-lite",
+  "prompt_sha256": "59a8f3d3fceb2f5b57339cbdf80afe2421c0a8d465c59b1fe9e771da78081f9d",
+  "artifact_sha256": "0cfcf58bd05b8b6962d4b7ca7a98216257b8e235298c67f2c15c43e9e02d084e",
+  "schema_sha256": "26b412fbcd12a98bfe5d548acf70c1ea54eaefeeceac4ea0b70b10de43499263",
+  "responses": [
+    "{\n  \"faithful\": false,\n  \"problems\": [\n    {\n      \"span\": \"Minas Gerais followed closely in fourth place\",\n      \"reason\": \"The summary indicates that Minas Gerais is ranked 3rd by orders, not 4th.\"\n    }\n  ]\n}"
+  ],
+  "latency_s": [
+    1.643
+  ]
+}

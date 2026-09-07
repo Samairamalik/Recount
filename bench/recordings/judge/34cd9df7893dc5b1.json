@@ -1,0 +1,12 @@
+{
+  "model": "gemini-3.1-flash-lite",
+  "prompt_sha256": "59a8f3d3fceb2f5b57339cbdf80afe2421c0a8d465c59b1fe9e771da78081f9d",
+  "artifact_sha256": "34cd9df7893dc5b1e691400540f0b0e4a47efda4a80a6a37400b3d7696b73aab",
+  "schema_sha256": "26b412fbcd12a98bfe5d548acf70c1ea54eaefeeceac4ea0b70b10de43499263",
+  "responses": [
+    "{\n  \"faithful\": false,\n  \"problems\": [\n    {\n      \"span\": \"Minas Gerais followed closely in third place, capturing a 12.07% order share with 5,240 orders that generated 852,060.95 in revenue\",\n      \"reason\": \"The revenue for Minas Gerais is listed as 825,060.95 in the summary, not 852,060.95.\"\n    }\n  ]\n}"
+  ],
+  "latency_s": [
+    2.038
+  ]
+}

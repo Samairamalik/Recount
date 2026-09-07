@@ -1,0 +1,12 @@
+{
+  "model": "gemini-3.1-flash-lite",
+  "prompt_sha256": "59a8f3d3fceb2f5b57339cbdf80afe2421c0a8d465c59b1fe9e771da78081f9d",
+  "artifact_sha256": "e943dc1eba59a349f289280bbe6d9bde9ac2593b71edd2cd99e1c80f23be8282",
+  "schema_sha256": "26b412fbcd12a98bfe5d548acf70c1ea54eaefeeceac4ea0b70b10de43499263",
+  "responses": [
+    "{\n  \"faithful\": false,\n  \"problems\": [\n    {\n      \"span\": \"39.31%\",\n      \"reason\": \"The order share for Sao Paulo is 39.3087%, which rounds to 39.31%, but the report claims it represents 'roughly two-fifths' (40%) of all orders, which is a slightly inaccurate characterization.\"\n    },\n    {\n      \"span\": \"12.10 days\",\n      \"reason\": \"The average delivery time for Minas Gerais is 12.0765 days, which rounds to 12.08, not 12.10.\"\n    }\n  ]\n}"
+  ],
+  "latency_s": [
+    1.459
+  ]
+}

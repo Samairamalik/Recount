@@ -1,0 +1,12 @@
+{
+  "model": "gemini-3.1-flash-lite",
+  "prompt_sha256": "59a8f3d3fceb2f5b57339cbdf80afe2421c0a8d465c59b1fe9e771da78081f9d",
+  "artifact_sha256": "8175057faeffffebcaf20bddf6d9c9894f40c7f72f895974707ce72ede39787a",
+  "schema_sha256": "26b412fbcd12a98bfe5d548acf70c1ea54eaefeeceac4ea0b70b10de43499263",
+  "responses": [
+    "{\n  \"faithful\": false,\n  \"problems\": [\n    {\n      \"span\": \"bringing the average delivery time down to 21.55 days\",\n      \"reason\": \"The summary indicates the average delivery time for the second quarter was 12.55 days, not 21.55 days.\"\n    }\n  ]\n}"
+  ],
+  "latency_s": [
+    2.885
+  ]
+}

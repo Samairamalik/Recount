@@ -11,4 +11,6 @@ jobs:
       - run: uv run ruff check
       - run: uv run mypy
       - run: uv run pytest
+      - run: uv run recount bench --write-readme   # replay mode: recorded responses, no key (C3)
+      - run: git diff --exit-code README.md bench/results/latest.json   # committed numbers must reproduce (C4)
       - run: uv run pip-audit || true   # advisory until deps stabilize

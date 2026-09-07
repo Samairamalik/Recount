@@ -1,0 +1,12 @@
+{
+  "model": "gemini-3.1-flash-lite",
+  "prompt_sha256": "59a8f3d3fceb2f5b57339cbdf80afe2421c0a8d465c59b1fe9e771da78081f9d",
+  "artifact_sha256": "1c42c70a93fecdd1ce6cba070cef5bab6ddc67ca2ec47a47c20b5b89ffd864cb",
+  "schema_sha256": "26b412fbcd12a98bfe5d548acf70c1ea54eaefeeceac4ea0b70b10de43499263",
+  "responses": [
+    "{\n  \"faithful\": false,\n  \"problems\": [\n    {\n      \"span\": \"order count shrank by 41.47% to peak at 17,280 orders\",\n      \"reason\": \"The report claims order count shrank by 41.47%, but the summary shows an increase of 41.47% in order volume for the fourth quarter.\"\n    }\n  ]\n}"
+  ],
+  "latency_s": [
+    2.561
+  ]
+}

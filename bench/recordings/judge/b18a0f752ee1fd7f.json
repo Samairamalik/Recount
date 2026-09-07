@@ -1,0 +1,12 @@
+{
+  "model": "gemini-3.1-flash-lite",
+  "prompt_sha256": "59a8f3d3fceb2f5b57339cbdf80afe2421c0a8d465c59b1fe9e771da78081f9d",
+  "artifact_sha256": "b18a0f752ee1fd7f267ff898b30a5499d7dc285e051c7c01443efc5209e05f40",
+  "schema_sha256": "26b412fbcd12a98bfe5d548acf70c1ea54eaefeeceac4ea0b70b10de43499263",
+  "responses": [
+    "{\n  \"faithful\": false,\n  \"problems\": [\n    {\n      \"span\": \"12.1 days\",\n      \"reason\": \"The summary indicates the average delivery time for Sao Paulo (SP) is 9.3050 days, not 12.1 days.\"\n    }\n  ]\n}"
+  ],
+  "latency_s": [
+    2.565
+  ]
+}

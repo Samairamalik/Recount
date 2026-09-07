@@ -1,0 +1,12 @@
+{
+  "model": "gemini-3.1-flash-lite",
+  "prompt_sha256": "59a8f3d3fceb2f5b57339cbdf80afe2421c0a8d465c59b1fe9e771da78081f9d",
+  "artifact_sha256": "258e80eb1eb43637bb0a9ef0c2978f3c4f916bca34fb3b7b60eb7cad9a382a39",
+  "schema_sha256": "26b412fbcd12a98bfe5d548acf70c1ea54eaefeeceac4ea0b70b10de43499263",
+  "responses": [
+    "{\n  \"faithful\": false,\n  \"problems\": [\n    {\n      \"span\": \"Minas Gerais followed closely in third place, capturing a 12.07% order share\",\n      \"reason\": \"The report states Minas Gerais is in third place, but the summary table shows it is in third place by revenue and third place by orders, which is correct, but the order share is 12.0659%, which rounds to 12.07%, so this is actually correct. Wait, checking the report again: 'Minas Gerais followed closely in third place, capturing a 12.07% order share with 5,240 orders that generated 825,600.95 in revenue'. The summary shows revenue for MG is 825060.95. The report says 825,600.95. This is a mismatch.\"\n    }\n  ]\n}"
+  ],
+  "latency_s": [
+    2.141
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "model": "gemini-3.1-flash-lite",
+  "prompt_sha256": "59a8f3d3fceb2f5b57339cbdf80afe2421c0a8d465c59b1fe9e771da78081f9d",
+  "artifact_sha256": "b08904e02c26f624afd6e80feb790cf32aa0762c20b04f36850ecae7674352ed",
+  "schema_sha256": "26b412fbcd12a98bfe5d548acf70c1ea54eaefeeceac4ea0b70b10de43499263",
+  "responses": [
+    "{\n  \"faithful\": false,\n  \"problems\": [\n    {\n      \"span\": \"12.04%\",\n      \"reason\": \"The order share for Minas Gerais is 12.0659%, which rounds to 12.07%, not 12.04%.\"\n    }\n  ]\n}"
+  ],
+  "latency_s": [
+    2.136
+  ]
+}

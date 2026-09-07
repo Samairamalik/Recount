@@ -1,0 +1,12 @@
+{
+  "model": "gemini-3.1-flash-lite",
+  "prompt_sha256": "59a8f3d3fceb2f5b57339cbdf80afe2421c0a8d465c59b1fe9e771da78081f9d",
+  "artifact_sha256": "d7a308fedfe4b61e556c21d196b11d6a49fb4707943fe4c11657562a0cbfeec1",
+  "schema_sha256": "26b412fbcd12a98bfe5d548acf70c1ea54eaefeeceac4ea0b70b10de43499263",
+  "responses": [
+    "{\n  \"faithful\": false,\n  \"problems\": [\n    {\n      \"span\": \"39.31%\",\n      \"reason\": \"The summary states the order share for Sao Paulo is 39.3087%, which rounds to 39.31%, but the report claims this represents 'roughly two-fifths' of all orders. Two-fifths is 40%, which is not an accurate description of 39.31%.\"\n    },\n    {\n      \"span\": \"5.05% share of total order volume with 1,653 orders\",\n      \"reason\": \"The summary indicates that Santa Catarina (SC) has an order share of 3.8063%, not 5.05%. The 5.05% figure is incorrectly attributed to Santa Catarina; it belongs to Parana.\"\n    }\n  ]\n}"
+  ],
+  "latency_s": [
+    3.416
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "model": "gemini-3.1-flash-lite",
+  "prompt_sha256": "59a8f3d3fceb2f5b57339cbdf80afe2421c0a8d465c59b1fe9e771da78081f9d",
+  "artifact_sha256": "48162d46f7f6c1bd222e8010acc5adb3fcfb3cafae043be11485c9c79e99fafc",
+  "schema_sha256": "26b412fbcd12a98bfe5d548acf70c1ea54eaefeeceac4ea0b70b10de43499263",
+  "responses": [
+    "{\n  \"faithful\": false,\n  \"problems\": [\n    {\n      \"span\": \"Rio de Janeiro secured the fourth position overall\",\n      \"reason\": \"The summary indicates Rio de Janeiro (RJ) is ranked 2nd by revenue and 2nd by orders, not 4th.\"\n    },\n    {\n      \"span\": \"Minas Gerais followed closely in third place\",\n      \"reason\": \"The summary indicates Minas Gerais (MG) is ranked 3rd by revenue and 3rd by orders, which is not 'following' Rio de Janeiro if Rio is 2nd.\"\n    }\n  ]\n}"
+  ],
+  "latency_s": [
+    2.999
+  ]
+}

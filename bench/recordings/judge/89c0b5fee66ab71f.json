@@ -1,0 +1,12 @@
+{
+  "model": "gemini-3.1-flash-lite",
+  "prompt_sha256": "59a8f3d3fceb2f5b57339cbdf80afe2421c0a8d465c59b1fe9e771da78081f9d",
+  "artifact_sha256": "89c0b5fee66ab71f4745a040dafe2ba9806bf31cef26962e696103e6cfc2c0d3",
+  "schema_sha256": "26b412fbcd12a98bfe5d548acf70c1ea54eaefeeceac4ea0b70b10de43499263",
+  "responses": [
+    "{\n  \"faithful\": false,\n  \"problems\": [\n    {\n      \"span\": \"5,240 orders\",\n      \"reason\": \"The report incorrectly attributes 5,240 orders to Sao Paulo; the summary indicates Sao Paulo had 17,071 orders.\"\n    },\n    {\n      \"span\": \"Minas Gerais followed closely in third place, capturing a 12.07% order share with 5,240 orders\",\n      \"reason\": \"While the order share and count are correct for Minas Gerais, the report previously claimed Sao Paulo had 5,240 orders, creating a contradiction.\"\n    }\n  ]\n}"
+  ],
+  "latency_s": [
+    2.497
+  ]
+}

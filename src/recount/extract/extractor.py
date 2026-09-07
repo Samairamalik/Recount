@@ -27,8 +27,12 @@ CLAIM_CLASSES: tuple[type[Claim], ...] = (PointValue, Growth, Comparison, Rankin
 _BY_TYPE: dict[str, type[Claim]] = {
     get_args(cls.model_fields["type"].annotation)[0]: cls for cls in CLAIM_CLASSES
 }
-# Wire-required: the model must always name these. Everything else is nullable on the
-# wire; Pydantic re-validation enforces each type's own requirements afterwards.
+# Never-null on the wire: the model must always name these. Everything else is nullable
+# on the wire; Pydantic re-validation enforces each type's own requirements afterwards.
+# Since Stage 5 (docs/benchmark.md §6, changelog 1) EVERY key is *required*: a model that
+# drops optional keys instead of writing null (gemini-3.1-flash-lite omitted `subject`
+# on 55/55 objects and `value`/`direction`/`period` by type) must now emit an explicit
+# null, which Pydantic then rejects where the type needs a value. Post-validation unchanged.
 WIRE_REQUIRED = ("id", "type", "span", "metric", "confidence")
 
 
@@ -82,7 +86,7 @@ def wire_schema() -> dict[str, Any]:
     properties["type"] = {"type": "string", "enum": list(_BY_TYPE)}
     return {
         "type": "array",
-        "items": {"type": "object", "properties": properties, "required": list(WIRE_REQUIRED)},
+        "items": {"type": "object", "properties": properties, "required": list(properties)},
     }
 
 

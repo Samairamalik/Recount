@@ -1,0 +1,12 @@
+{
+  "model": "gemini-3.1-flash-lite",
+  "prompt_sha256": "59a8f3d3fceb2f5b57339cbdf80afe2421c0a8d465c59b1fe9e771da78081f9d",
+  "artifact_sha256": "2eb5e8ca7304a78b3cfff872d9083c312b44f65d11c8cc51d1e675449ef7e122",
+  "schema_sha256": "26b412fbcd12a98bfe5d548acf70c1ea54eaefeeceac4ea0b70b10de43499263",
+  "responses": [
+    "{\n  \"faithful\": false,\n  \"problems\": [\n    {\n      \"span\": \"39.31%\",\n      \"reason\": \"The order share for Sao Paulo is 39.3087%, which rounds to 39.31%, but the report claims this represents 'roughly two-fifths' of all orders; 2/5 is 40%, and 39.31% is not a standard approximation for two-fifths in this context.\"\n    },\n    {\n      \"span\": \"net profit\",\n      \"reason\": \"The summary provides revenue figures, not net profit figures; the report incorrectly labels the revenue for Santa Catarina as net profit.\"\n    }\n  ]\n}"
+  ],
+  "latency_s": [
+    2.497
+  ]
+}

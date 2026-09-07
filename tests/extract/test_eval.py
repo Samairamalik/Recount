@@ -1,6 +1,7 @@
-"""The extraction mini-eval: the matching policy on a miniature, then the recorded
-Stage 4 run against the 57 labels. The recorded numbers are the ones docs/eval.md
-reports; if they drift, the doc is stale and this test says so."""
+"""The extraction mini-eval: the matching policy on a miniature, then the recorded runs
+against the 57 labels. The recorded numbers are the ones docs/eval.md reports; if they
+drift, the doc is stale and this test says so. Both recordings were re-made in Stage 5
+after the wire schema made every key required (docs/benchmark.md §6, changelog 1)."""
 
 from __future__ import annotations
 
@@ -18,6 +19,7 @@ from recount.io import load_dataset
 
 CFG = load_config(Path("tests/fixtures/olist_metrics.yml"))
 RECORDING = Path("tests/fixtures/extract/report.json")
+LITE_RECORDING = Path("tests/fixtures/extract/report.flash-lite.json")  # the benchmark model
 
 
 def _claim(**fields: Any) -> Any:
@@ -127,18 +129,18 @@ def test_recorded_span_validity_is_total_by_construction(labels: dict[str, Any])
     extraction = extract_claims(artifact, MockClient(RECORDING))
     assert all(c.span in artifact for c in extraction.claims)
     assert extraction.rejected == ()
-    assert len(extraction.claims) == 62
+    assert len(extraction.claims) == 63
 
 
 def test_recorded_numbers_match_docs_eval_md(recorded: EvalReport) -> None:
     s = recorded.summary()
     assert (s["labels"], s["claims"], s["matched"], s["merged"], s["missed"], s["spurious"]) == (
-        57, 62, 55, 0, 2, 7
+        57, 63, 55, 0, 2, 8
     )  # fmt: skip
-    assert s["recall"] == 0.9649 and s["precision"] == 0.8871
+    assert s["recall"] == 0.9649 and s["precision"] == 0.873
     assert s["span_validity"] == 1.0
     assert recorded.missed == ("c1", "c30")
-    assert s["binding"]["metric"] == (54, 55)
+    assert s["binding"]["metric"] == (55, 55)
     assert s["binding"]["period"] == (55, 55)
     assert s["binding"]["subject"] == (28, 28)
     assert s["binding"]["direction"] == (10, 10)
@@ -149,6 +151,25 @@ def test_recorded_numbers_match_docs_eval_md(recorded: EvalReport) -> None:
 
 def test_recorded_sweep_catches_the_numeric_miss(recorded: EvalReport) -> None:
     assert recorded.sweep_flagged == ("c1",) and recorded.sweep_silent == ()
+
+
+def test_recorded_flash_lite_numbers_match_docs_eval_md(labels: dict[str, Any]) -> None:
+    """The benchmark's extraction model (docs/eval.md, Stage 5 addendum): the honesty
+    gate was recall >= 0.85 and precision 1.0."""
+    artifact = Path(labels["report"]).read_text()
+    extraction = extract_claims(artifact, MockClient(LITE_RECORDING))
+    assert extraction.model == "gemini-3.1-flash-lite"
+    assert len(extraction.claims) == 51
+    assert sorted(r.reason for r in extraction.rejected) == ["foreign_field"] * 4
+    dataset = load_dataset(Path("examples/olist/orders.parquet"), CFG)
+    rep = evaluate(artifact, labels["claims"], extraction, CFG, dataset)
+    s = rep.summary()
+    assert (s["matched"], s["merged"], s["missed"], s["spurious"]) == (51, 1, 5, 0)
+    assert s["recall"] == 0.8947 and s["precision"] == 1.0 and s["span_validity"] == 1.0
+    assert rep.missed == ("c1", "c18", "c24", "c29", "c30") and rep.merged == ("c28",)
+    assert s["binding"]["subject"] == (28, 28) and s["binding"]["metric"] == (45, 51)
+    assert s["verdicts"] == {"agree": 47, "false_accept": 0, "false_flag": 0, "other": 4}
+    assert rep.sweep_flagged == ("c1", "c18", "c24", "c29") and rep.sweep_silent == ()
 
 
 def test_iteration_1_recording_is_kept_only_as_numbers() -> None:

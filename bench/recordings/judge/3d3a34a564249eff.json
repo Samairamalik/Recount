@@ -1,0 +1,12 @@
+{
+  "model": "gemini-3.1-flash-lite",
+  "prompt_sha256": "59a8f3d3fceb2f5b57339cbdf80afe2421c0a8d465c59b1fe9e771da78081f9d",
+  "artifact_sha256": "3d3a34a564249eff0b03b2b05ee7b500502bc2c48d74435ee770afd97c6761bc",
+  "schema_sha256": "26b412fbcd12a98bfe5d548acf70c1ea54eaefeeceac4ea0b70b10de43499263",
+  "responses": [
+    "{\n  \"faithful\": false,\n  \"problems\": [\n    {\n      \"span\": \"Rio Grande do Sul generated 411,077.38 in revenue across 5,291 orders\",\n      \"reason\": \"The summary indicates that Rio Grande do Sul (RS) had 2,591 orders, not 5,291.\"\n    }\n  ]\n}"
+  ],
+  "latency_s": [
+    1.886
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "model": "gemini-3.1-flash-lite",
+  "prompt_sha256": "59a8f3d3fceb2f5b57339cbdf80afe2421c0a8d465c59b1fe9e771da78081f9d",
+  "artifact_sha256": "3328e9b10c4925636cce319f4688e81d0b0f8a4daed4c77f59ef64ec492705d3",
+  "schema_sha256": "26b412fbcd12a98bfe5d548acf70c1ea54eaefeeceac4ea0b70b10de43499263",
+  "responses": [
+    "{\n  \"faithful\": false,\n  \"problems\": [\n    {\n      \"span\": \"13.74% of total orders nationwide\",\n      \"reason\": \"The report claims Rio de Janeiro accounted for 13.74% of total orders, but the summary shows Rio de Janeiro (RJ) had 5,968 orders out of 43,428, which is 13.7423%. While the percentage is correct, the report incorrectly attributes 2,192 orders to Rio de Janeiro, whereas the summary shows 5,968 orders for RJ and 2,192 orders for Parana (PR).\"\n    },\n    {\n      \"span\": \"Parana logged 2,192 orders\",\n      \"reason\": \"The report states Parana logged 2,192 orders, which is correct, but it previously attributed this same number of orders to Rio de Janeiro.\"\n    }\n  ]\n}"
+  ],
+  "latency_s": [
+    2.805
+  ]
+}

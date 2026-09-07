@@ -1,0 +1,12 @@
+{
+  "model": "gemini-3.1-flash-lite",
+  "prompt_sha256": "59a8f3d3fceb2f5b57339cbdf80afe2421c0a8d465c59b1fe9e771da78081f9d",
+  "artifact_sha256": "12248cf6d381e81011c5a87c2e4d77d35e2c4bbe2cf9bd30dd5d59faa1595dc8",
+  "schema_sha256": "26b412fbcd12a98bfe5d548acf70c1ea54eaefeeceac4ea0b70b10de43499263",
+  "responses": [
+    "{\n  \"faithful\": false,\n  \"problems\": [\n    {\n      \"span\": \"Parana followed closely in third place.\",\n      \"reason\": \"The summary data shows Parana (PR) is ranked 5th by revenue and 5th by orders, not 3rd.\"\n    }\n  ]\n}"
+  ],
+  "latency_s": [
+    1.768
+  ]
+}

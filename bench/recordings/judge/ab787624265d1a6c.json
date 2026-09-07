@@ -1,0 +1,12 @@
+{
+  "model": "gemini-3.1-flash-lite",
+  "prompt_sha256": "59a8f3d3fceb2f5b57339cbdf80afe2421c0a8d465c59b1fe9e771da78081f9d",
+  "artifact_sha256": "ab787624265d1a6cca71ea4f7631ef3a80fd687d5e6b8d8aad464d27168b1947",
+  "schema_sha256": "26b412fbcd12a98bfe5d548acf70c1ea54eaefeeceac4ea0b70b10de43499263",
+  "responses": [
+    "{\n  \"faithful\": false,\n  \"problems\": [\n    {\n      \"span\": \"3.81% refund share\",\n      \"reason\": \"The summary indicates that 3.81% is the order_share_pct for Santa Catarina, not a refund share.\"\n    }\n  ]\n}"
+  ],
+  "latency_s": [
+    3.311
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "model": "gemini-3.1-flash-lite",
+  "prompt_sha256": "59a8f3d3fceb2f5b57339cbdf80afe2421c0a8d465c59b1fe9e771da78081f9d",
+  "artifact_sha256": "af34f745be95a7bd3c2d38fd0382b621a46b906ecc74e3428c53c1719e1baa0a",
+  "schema_sha256": "26b412fbcd12a98bfe5d548acf70c1ea54eaefeeceac4ea0b70b10de43499263",
+  "responses": [
+    "{\n  \"faithful\": false,\n  \"problems\": [\n    {\n      \"span\": \"representing roughly two-fifths of all orders at 39.31%\",\n      \"reason\": \"39.31% is not roughly two-fifths (40%). While close, the report implies a direct equivalence that is mathematically inaccurate.\"\n    }\n  ]\n}"
+  ],
+  "latency_s": [
+    1.747
+  ]
+}
