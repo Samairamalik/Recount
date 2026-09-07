@@ -12,7 +12,7 @@ from recount.cli import app
 
 DATA = Path("examples/olist/orders.parquet")
 CONFIG = Path("examples/olist/metrics.yml")
-REPORT = Path("examples/olist/report.md")
+REPORT = Path("spike/report_clean.md")  # = examples/olist/report.md on main
 RECORDINGS = Path("bench/recordings/extract")
 runner = CliRunner()
 BASE = ["verify", str(REPORT), "--data", str(DATA), "--config", str(CONFIG)]

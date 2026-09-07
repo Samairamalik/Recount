@@ -13,7 +13,7 @@ from recount.report.json_out import RunRecord
 
 DATA = Path("examples/olist/orders.parquet")
 CONFIG = Path("examples/olist/metrics.yml")
-REPORT = Path("examples/olist/report.md")
+REPORT = Path("spike/report_clean.md")  # = examples/olist/report.md on main
 RECORDINGS = Path("bench/recordings/extract")
 
 

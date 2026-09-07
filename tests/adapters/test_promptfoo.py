@@ -8,7 +8,7 @@ from recount.adapters.promptfoo import get_assert
 
 DATA = Path("examples/olist/orders.parquet")
 CONFIG = Path("examples/olist/metrics.yml")
-REPORT = Path("examples/olist/report.md")
+REPORT = Path("spike/report_clean.md")  # = examples/olist/report.md on main
 RECORDINGS = Path("bench/recordings/extract")
 
 

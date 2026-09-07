@@ -7,7 +7,7 @@ import pytest
 FIXTURES = Path(__file__).parent / "fixtures"
 EXAMPLE_DATA = Path("examples/olist/orders.parquet")
 EXAMPLE_CONFIG = Path("examples/olist/metrics.yml")
-EXAMPLE_REPORT = Path("examples/olist/report.md")
+EXAMPLE_REPORT = Path("spike/report_clean.md")  # = examples/olist/report.md on main
 RECORDINGS = Path("bench/recordings/extract")
 
 
