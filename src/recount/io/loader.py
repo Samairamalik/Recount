@@ -74,6 +74,22 @@ def load_dataset(
     return attach(con, config, max_rows=max_rows)
 
 
+def describe_dataset(path: Path) -> dict[str, str]:
+    """Column name -> DuckDB type, for `recount init`. Same readers and caps as
+    `load_dataset`; no config needed and no contents read beyond the schema."""
+    if not path.is_file():
+        raise LoadError(f"dataset not found: {path}")
+    con = duckdb.connect()
+    suffix = path.suffix.lower()
+    if suffix == ".parquet":
+        rel = con.read_parquet(str(path))
+    elif suffix == ".csv":
+        rel = con.read_csv(str(path))
+    else:
+        raise LoadError(f"unsupported dataset format {suffix!r}; use .csv or .parquet")
+    return {str(name): str(dtype) for name, dtype in zip(rel.columns, rel.types, strict=True)}
+
+
 def attach(
     con: duckdb.DuckDBPyConnection, config: SemanticConfig, *, max_rows: int = MAX_ROWS
 ) -> Dataset:

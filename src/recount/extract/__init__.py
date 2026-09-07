@@ -2,6 +2,7 @@
 
 from recount.extract.client import (
     MODEL,
+    ClaimsFileClient,
     ExtractError,
     ExtractorClient,
     GeminiClient,
@@ -32,6 +33,7 @@ __all__ = [
     "Coverage",
     "PROMPT",
     "WIRE_SCHEMA",
+    "ClaimsFileClient",
     "ExtractError",
     "Extraction",
     "ExtractorClient",

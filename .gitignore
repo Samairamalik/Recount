@@ -13,3 +13,4 @@ spike/data/
 out.html
 verdicts.json
 .DS_Store
+.claude/launch.json

@@ -1,0 +1,52 @@
+# Olist example config: what the report's words mean in examples/olist/orders.parquet.
+# Identical to tests/fixtures/olist_metrics.yml (the benchmark's verification config).
+dataset: examples/olist/orders.parquet
+time_column: order_date
+tolerance_rule: half_ulp
+entities:
+  state:
+    column: state
+    aliases:
+      Sao Paulo: SP
+      Rio de Janeiro: RJ
+      Minas Gerais: MG
+      Rio Grande do Sul: RS
+      Parana: PR
+      Santa Catarina: SC
+metrics:
+  revenue:
+    agg: sum
+    column: revenue
+    aliases: [revenue, total revenue, gross revenue]
+    round: 2            # SUM over DOUBLE varies ~3.5e-07 with row order (spike d6)
+    polarity: higher_is_better
+  orders:
+    agg: count
+    aliases: [orders, order volume, order count]
+    # F-3 opt-in (docs/benchmark.md, changelog 6). Rankings written as "second position
+    # overall" name no measure; the extractor writes the metric as "overall performance"
+    # and the verifier abstains schema_gap. Uncommenting these two lines declares that in
+    # YOUR reports "overall" means the order count. Recount never assumes it. The
+    # alias-on benchmark row is measured with tests/fixtures/olist_metrics.alias-on.yml (benchmark).
+    # aliases: [orders, order volume, order count, overall, overall performance]
+    polarity: higher_is_better
+  avg_order_value:
+    agg: avg
+    column: revenue
+    aliases: [average order value]
+    polarity: higher_is_better
+  avg_delivery_days:
+    agg: avg
+    column: delivery_days   # AVG skips the 2 NULL rows
+    # "days for delivery" (Stage 6, changelog 7): "averaging 14.74 days for delivery" is a literal
+    # description of this metric; refusing it was vocabulary poverty, not caution.
+    aliases: [average delivery time, average delivery times, average delivery turnaround, delivery time, days for delivery]
+    # Opt-in (Stage 6, changelog 7, like F-3): "delivery performance improved" does not say WHICH
+    # measure improved (delivery time? on-time rate?). Uncomment only if in your reports it means
+    # the average delivery time. Recount never assumes it.
+    # aliases: [average delivery time, average delivery times, average delivery turnaround, delivery time, days for delivery, delivery performance]
+    polarity: lower_is_better
+  order_share_pct:
+    agg: share
+    aliases: [order share, share of total orders, share of total order volume, percentage of orders]
+    polarity: higher_is_better

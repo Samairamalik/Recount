@@ -1,0 +1,31 @@
+# The Recount gate on the example report: any report change in a PR is verified against the
+# example dataset and a FAIL blocks the check. Keys never enter PR CI (spec §2.3), so extraction
+# replays the committed recordings (the live model's responses for these exact texts); a
+# report whose text has no recording fails with exit 2 rather than passing silently.
+name: verify-reports
+on:
+  pull_request:
+    paths: ["examples/olist/report.md", "examples/olist/metrics.yml", "action.yml", "Dockerfile"]
+  push:
+    branches: [main]
+    paths: ["examples/olist/report.md", "examples/olist/metrics.yml", "action.yml", "Dockerfile"]
+jobs:
+  recount:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Recount verify (keyless replay)
+        id: recount
+        uses: ./
+        with:
+          report: examples/olist/report.md
+          data: examples/olist/orders.parquet
+          config: examples/olist/metrics.yml
+          recordings: bench/recordings/extract
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: recount-report
+          path: |
+            recount-report.html
+            recount-verdicts.json

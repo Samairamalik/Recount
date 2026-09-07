@@ -1,0 +1,47 @@
+name: "Recount verify"
+description: "Deterministically verify the numeric claims in an LLM-generated report against its dataset; fail the check on any FAIL."
+author: "Samaira Malik"
+branding:
+  icon: "check-square"
+  color: "green"
+inputs:
+  report:
+    description: "Path to the report (Markdown or text), relative to the workspace."
+    required: true
+  data:
+    description: "Dataset path (.parquet or .csv)."
+    required: true
+  config:
+    description: "Semantic config (metrics.yml)."
+    required: true
+  strict:
+    description: "Also fail on UNVERIFIABLE claims or unextracted numerics (\"true\"/\"false\")."
+    default: "false"
+  claims:
+    description: "Pre-extracted claims JSON: fully offline, no key (FR-015)."
+    default: ""
+  recordings:
+    description: "Directory of recorded extractions keyed by artifact sha256[:16]: keyless replay."
+    default: ""
+  html:
+    description: "Where to write the annotated HTML report (upload it as an artifact)."
+    default: "recount-report.html"
+  json:
+    description: "Where to write the run record."
+    default: "recount-verdicts.json"
+runs:
+  using: "docker"
+  image: "Dockerfile"
+  entrypoint: "/bin/sh"
+  args:
+    - "-c"
+    - >-
+      set -e;
+      ARGS="${{ inputs.report }} --data ${{ inputs.data }} --config ${{ inputs.config }}
+      --json ${{ inputs.json }} --html ${{ inputs.html }} --md recount-summary.md --annotations";
+      if [ "${{ inputs.strict }}" = "true" ]; then ARGS="$ARGS --strict"; fi;
+      if [ -n "${{ inputs.claims }}" ]; then ARGS="$ARGS --claims ${{ inputs.claims }}"; fi;
+      if [ -n "${{ inputs.recordings }}" ]; then ARGS="$ARGS --recordings ${{ inputs.recordings }}"; fi;
+      set +e; recount verify $ARGS; CODE=$?; set -e;
+      if [ -f recount-summary.md ] && [ -n "$GITHUB_STEP_SUMMARY" ]; then cat recount-summary.md >> "$GITHUB_STEP_SUMMARY"; fi;
+      exit $CODE

@@ -108,6 +108,20 @@ class MockClient:
         return self._responses.pop(0)
 
 
+class ClaimsFileClient:
+    """The fully offline path (FR-015): `--claims claims.json` is "the response". The file
+    goes through the same validation and post-checks as a live response, so a hand-written
+    claim whose span is not verbatim in the artifact is rejected like any other."""
+
+    model = "claims-file"
+
+    def __init__(self, path: Path) -> None:
+        self.path = path
+
+    def complete(self, prompt: str, artifact: str, schema: dict[str, Any]) -> str:
+        return self.path.read_text()
+
+
 class RecordingClient:
     """Delegates to a live client and keeps every raw response; `save()` writes the recording."""
 

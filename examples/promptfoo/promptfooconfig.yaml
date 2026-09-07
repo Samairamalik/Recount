@@ -1,0 +1,32 @@
+# promptfoo worked example: verify a generated report with Recount (FR-012).
+#
+#   cd examples/promptfoo && npx promptfoo@latest eval
+#
+# The `echo` provider returns the prompt itself as the output, so this config verifies the
+# bundled report without calling any generator. Point `providers` at your own model and
+# `prompts` at your report-writing prompt to gate real generations the same way.
+#
+# Extraction: with `recount_recording` set, the recorded extraction is replayed and no API
+# key is needed (the recording is the live model's response for exactly this text; the
+# assertion refuses a stale one). Remove it to extract live with GEMINI_API_KEY.
+description: Recount verifies numeric claims in a generated report against the dataset
+
+prompts:
+  - file://../olist/report.md
+
+providers:
+  - id: echo
+
+defaultTest:
+  vars:
+    recount_data: ../olist/orders.parquet
+    recount_config: ../olist/metrics.yml
+    recount_strict: false
+  assert:
+    - type: python
+      value: file://recount_verify.py
+
+tests:
+  - description: the clean 2017 review, replayed from its recording
+    vars:
+      recount_recording: ../../bench/recordings/extract/a480cd830cd6f482.json

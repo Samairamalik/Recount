@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{ title }}</title>
+<style>
+:root { --pass:#1a7f37; --fail:#cf222e; --unv:#9a6700; --grey:#6e7781; --bg:#fff; --fg:#1f2328; --line:#d0d7de; --panel:#f6f8fa; }
+@media (prefers-color-scheme: dark) { :root { --bg:#0d1117; --fg:#e6edf3; --line:#30363d; --panel:#161b22; --pass:#3fb950; --fail:#f85149; --unv:#d29922; --grey:#8b949e; } }
+* { box-sizing:border-box; }
+body { margin:0; font:14px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; color:var(--fg); background:var(--bg); }
+header { position:sticky; top:0; z-index:2; background:var(--panel); border-bottom:1px solid var(--line); padding:10px 20px; display:flex; flex-wrap:wrap; gap:16px; align-items:baseline; }
+header h1 { font-size:15px; margin:0; font-weight:600; }
+.count { font-weight:600; } .count.PASS{color:var(--pass)} .count.FAIL{color:var(--fail)} .count.UNVERIFIABLE{color:var(--unv)} .count.grey{color:var(--grey)}
+.meta { font-family:ui-monospace, SFMono-Regular, Menlo, monospace; font-size:11px; color:var(--grey); width:100%; }
+main { display:grid; grid-template-columns: minmax(0, 1fr) 420px; gap:0; }
+article { padding:20px 24px; white-space:pre-wrap; max-width:80ch; overflow-wrap:anywhere; }
+article .h { font-weight:700; }
+mark { background:none; border-radius:3px; padding:0 2px; cursor:pointer; border-bottom:2px solid; }
+mark.PASS { border-color:var(--pass); background:color-mix(in srgb, var(--pass) 12%, transparent); }
+mark.FAIL { border-color:var(--fail); background:color-mix(in srgb, var(--fail) 18%, transparent); }
+mark.UNVERIFIABLE { border-color:var(--unv); background:color-mix(in srgb, var(--unv) 14%, transparent); }
+mark.unextracted { border-color:var(--grey); background:color-mix(in srgb, var(--grey) 14%, transparent); cursor:default; }
+mark.active { outline:2px solid var(--fg); }
+aside { position:sticky; top:52px; align-self:start; height:calc(100vh - 52px); overflow:auto; border-left:1px solid var(--line); padding:16px 18px; background:var(--panel); }
+aside h2 { font-size:13px; margin:0 0 8px; } aside h3 { font-size:12px; margin:14px 0 4px; color:var(--grey); text-transform:uppercase; letter-spacing:.04em; }
+.verdict { display:inline-block; font-weight:700; padding:2px 8px; border-radius:4px; color:#fff; }
+.verdict.PASS{background:var(--pass)} .verdict.FAIL{background:var(--fail)} .verdict.UNVERIFIABLE{background:var(--unv)}
+table.kv { border-collapse:collapse; width:100%; } table.kv td { padding:2px 4px; vertical-align:top; border-bottom:1px solid var(--line); } table.kv td:first-child { color:var(--grey); width:38%; }
+pre { background:var(--bg); border:1px solid var(--line); border-radius:4px; padding:8px; overflow:auto; font-size:12px; margin:4px 0; }
+.band { position:relative; height:22px; margin:6px 0; background:linear-gradient(90deg, transparent 0, transparent 100%); }
+.band .tol { position:absolute; top:6px; height:10px; background:color-mix(in srgb, var(--pass) 30%, transparent); left:35%; width:30%; border-radius:2px; }
+.band .pt { position:absolute; top:2px; width:4px; height:18px; background:var(--fg); }
+button.copy { font-size:11px; padding:1px 6px; margin-left:6px; cursor:pointer; }
+ul.fails { margin:0; padding-left:18px; } ul.fails li { cursor:pointer; text-decoration:underline; }
+.empty { color:var(--grey); font-style:italic; }
+footer { padding:12px 24px; color:var(--grey); font-size:12px; border-top:1px solid var(--line); }
+@media (max-width: 900px) { main { grid-template-columns:1fr; } aside { position:static; height:auto; } }
+</style>
+</head>
+<body>
+<header>
+  <h1>Recount</h1>
+  <span class="count PASS">{{ counts.PASS }} PASS</span>
+  <span class="count FAIL">{{ counts.FAIL }} FAIL</span>
+  <span class="count UNVERIFIABLE">{{ counts.UNVERIFIABLE }} UNVERIFIABLE</span>
+  <span class="count grey">{{ counts.unextracted_numeric }} unextracted numeric</span>
+  {% if counts.rejected %}<span class="count grey">{{ counts.rejected }} rejected</span>{% endif %}
+  <span>exit code <b>{{ exit_code }}</b>{% if record.strict %} (strict){% endif %}</span>
+  <div class="meta">recount {{ record.recount_version }} · extractor {{ record.extractor_model }} · artifact {{ record.artifact_path }} {{ record.artifact_sha256[:12] }} · dataset {{ record.dataset_path }} {{ record.dataset_sha256[:12] }} · config {{ record.config_path }} {{ record.config_sha256[:12] }}</div>
+</header>
+<main>
+<article id="report">{% for s in segments %}{% if s.kind == "text" %}{{ s.text }}{% elif s.kind == "unextracted" %}<mark class="unextracted" title="no claim verifies this number">{{ s.text }}</mark>{% else %}<mark class="{{ s.kind }}" data-id="{{ s.claim_id }}" id="span-{{ s.claim_id }}">{{ s.text }}</mark>{% endif %}{% endfor %}</article>
+<aside id="drawer">
+  <h2>Evidence</h2>
+  {% if fails %}
+  <h3>Failures first</h3>
+  <ul class="fails">{% for c in fails %}<li data-id="{{ c.id }}">{{ c.id }} · {{ c.span }}</li>{% endfor %}</ul>
+  {% endif %}
+  <div id="detail"><p class="empty">Click a highlighted span, or press j / k to walk the claims. Green PASS, red FAIL, amber UNVERIFIABLE, grey = a number no claim covers.</p></div>
+  {% if unextracted %}<h3>Unextracted numerics</h3><p>{{ unextracted|join(", ") }}</p>{% endif %}
+  {% if rejected %}<h3>Rejected wire objects</h3><ul>{% for r, d in rejected %}<li><code>{{ r }}</code> — {{ d }}</li>{% endfor %}</ul>{% endif %}
+</aside>
+</main>
+<footer>Every verdict above was computed by a fixed, parameterized SQL template over the dataset; the SQL shown in the drawer has its parameters substituted for display only. Recount verifies against the config's definition of each metric.</footer>
+<script id="claims" type="application/json">{{ claims_json|safe }}</script>
+<script>
+(function () {
+  var claims = JSON.parse(document.getElementById('claims').textContent);
+  var ids = Object.keys(claims);
+  var current = null;
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+  function kv(rows) { return '<table class="kv">' + rows.filter(function (r) { return r[1] !== null && r[1] !== undefined && r[1] !== ''; }).map(function (r) { return '<tr><td>' + esc(r[0]) + '</td><td>' + esc(r[1]) + '</td></tr>'; }).join('') + '</table>'; }
+  function copyBtn(text) { return '<button class="copy" data-copy="' + esc(text) + '">copy</button>'; }
+  function show(id) {
+    var c = claims[id]; if (!c) return;
+    current = id;
+    document.querySelectorAll('mark.active').forEach(function (m) { m.classList.remove('active'); });
+    var span = document.getElementById('span-' + id); if (span) { span.classList.add('active'); span.scrollIntoView({block: 'center'}); }
+    var h = '<p><span class="verdict ' + c.verdict + '">' + c.verdict + '</span> &nbsp;<b>' + esc(c.id) + '</b> · ' + esc(c.type) + '</p>';
+    h += '<blockquote>“' + esc(c.span) + '”</blockquote>';
+    h += '<h3>Claim as extracted</h3>' + kv(Object.keys(c.fields).map(function (k) { return [k, c.fields[k]]; }));
+    if (c.verdict === 'UNVERIFIABLE') {
+      h += '<h3>Why</h3><p><code>' + esc(c.reason || 'error') + '</code> — ' + esc(c.detail) + '</p>';
+      if (c.yaml_stub) { h += '<h3>Config stub that would resolve it' + copyBtn(c.yaml_stub) + '</h3><pre>' + esc(c.yaml_stub) + '</pre>'; }
+      else { h += '<p class="empty">No config change resolves this: the sentence needs a rewrite, or the tool lacks the capability.</p>'; }
+    } else {
+      h += '<h3>Claimed vs computed</h3>' + kv([['claimed', c.claimed], ['computed', c.computed], ['delta', c.delta], ['tolerance', c.tolerance], ['policy', c.policy]]);
+      if (c.tolerance !== null && c.delta !== null) {
+        var tol = parseFloat(String(c.tolerance).replace('±', '')); var x = 50 + Math.max(-48, Math.min(48, (c.delta / (tol * 4)) * 50));
+        h += '<div class="band"><div class="tol" style="left:37.5%;width:25%"></div><div class="pt" style="left:' + x + '%"></div></div><p class="empty">delta drawn against the tolerance band (clipped)</p>';
+      }
+      h += '<p>' + esc(c.detail) + '</p>';
+    }
+    if (c.sql) {
+      h += '<h3>SQL (parameters substituted for display)' + copyBtn(c.sql_display) + '</h3><pre>' + esc(c.sql_display) + '</pre>';
+      h += '<h3>As executed' + copyBtn(c.sql) + '</h3><pre>' + esc(c.sql) + '</pre>' + kv(Object.keys(c.params).map(function (k) { return ['$' + k, c.params[k]]; }));
+      h += '<h3>Row counts</h3>' + kv(Object.keys(c.row_counts).map(function (k) { return [k, c.row_counts[k]]; }));
+    }
+    document.getElementById('detail').innerHTML = h;
+  }
+  document.querySelectorAll('mark[data-id], li[data-id]').forEach(function (el) { el.addEventListener('click', function () { show(el.getAttribute('data-id')); }); });
+  document.addEventListener('click', function (e) { var b = e.target.closest && e.target.closest('button.copy'); if (b && navigator.clipboard) { navigator.clipboard.writeText(b.getAttribute('data-copy')); } });
+  document.addEventListener('keydown', function (e) {
+    if (e.key !== 'j' && e.key !== 'k') return;
+    var i = current ? ids.indexOf(current) : -1;
+    i = e.key === 'j' ? Math.min(ids.length - 1, i + 1) : Math.max(0, i - 1);
+    if (ids[i]) show(ids[i]);
+  });
+  var firstFail = ids.filter(function (id) { return claims[id].verdict === 'FAIL'; })[0];
+  if (firstFail) show(firstFail);
+})();
+</script>
+</body>
+</html>

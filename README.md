@@ -8,7 +8,23 @@ checkable claim; recomputes each one with plain SQL (DuckDB) — zero AI in the
 verification step — and returns PASS / FAIL / UNVERIFIABLE per claim with the
 executed query and row counts as proof.
 
-> Status: Stage 6, part A (benchmark-driven fixes replayed; see the table below and `docs/benchmark.md` §6–7). CLI packaging follows in part B.
+> Status: Stage 6 (CLI, HTML report, promptfoo assertion, GitHub Action; benchmark numbers below and in `docs/benchmark.md` §6–7).
+
+## Quickstart (no API key needed for the bundled example)
+
+```bash
+uv sync
+uv run recount verify examples/olist/report.md \
+  --data examples/olist/orders.parquet --config examples/olist/metrics.yml \
+  --recordings bench/recordings/extract --html out.html
+```
+
+You get a verdict table, `40 PASS · 0 FAIL · 11 UNVERIFIABLE · 5 unextracted numeric · 4 rejected`,
+exit code 0, and `out.html`: the report as written with every claim coloured, click for the
+SQL. `--recordings` replays the extractor's recorded response for this exact text; set
+`GEMINI_API_KEY` and drop it to extract live. For your own data: `recount init --data
+your.parquet` writes a commented `metrics.yml` to edit. Exit codes 0 / 1 / 2 and `--strict`,
+the promptfoo assertion and the GitHub Action: [docs/cli.md](docs/cli.md).
 
 ## What Recount does NOT do (honesty section — keep this current)
 - It does not make the generator hallucinate less; it makes hallucinated numbers detectable.
