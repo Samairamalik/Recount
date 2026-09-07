@@ -5,7 +5,7 @@ Status: **MEASURED, then amended in Stage 6.** One live run on 2026-09-07 (197 c
 keylessly by `uv run recount bench --write-readme` from the committed recordings, and CI
 fails if the README, `bench/results/latest.json` or `bench/results/latest.alias-on.json`
 drifts from that replay (C4). Stage 6 part A (2026-09-07) ruled on findings F-2 to F-5 and
-replayed each change on the same recordings: changelog entries 3–6, tables C and D. Rows carry ids
+replayed each change on the same recordings: changelog entries 3–7, tables C and D. Rows carry ids
 (B, M, J, C, F, I) so rulings can cite them; rulings of 2026-09-06 and 2026-09-07 are
 folded in, and post-review amendments are marked *(amended)*.
 
@@ -17,7 +17,7 @@ folded in, and post-review amendments are marked *(amended)*.
 | I2 | No change to `verify/`, `compile/` or `extract/` (prompt, schema, sweep) is made to move a benchmark number without the owner's approval first. Every approved change gets an entry in §6 (changelog) with the before/after numbers. |
 | I3 | Detection is never reported alone. Every row that shows a detection rate shows coverage, abstention and false-accept in the same row (M11). |
 | I4 | The hit-claim rule (M1) and the outcome definitions (M2) are fixed here before the first run; the analysis section may explain a number, never reclassify it. |
-| I5 | Seeds are published (1–5). Same seed → byte-identical suite (B5). Suite hashes are recorded in the results JSON so a regenerated suite can be checked against the one that was scored. |
+| I5 | Seeds are published (1–5). Same seed → byte-identical suite (B5). Suite hashes are recorded in the results JSON so a regenerated suite can be checked against the one that was scored. *(Amended Stage 6, changelog 7.)* The suite is generated from the frozen snapshot `bench/suite_config.yml` (the Stage 5 config), never from the verifier's config: the fabricated_metric pool reads config aliases, so a vocabulary change would re-sample the suite. `test_suite_is_frozen_to_the_stage5_hash` pins `fcd63c6c9739…`. |
 
 ## 1. Suite construction (bench/corrupt.py)
 
@@ -120,6 +120,7 @@ pinned, so any movement is a verifier change.
 | 4 | 2026-09-07 | **Sweep: token-to-field coverage** (`extract/sweep.py: sweep(artifact, coverage)`; `coverage(claims)` pairs each accepted span with the values its claim binds, `value` or `rank`; `NumericToken.value` parses prefix, grouping, `%` and K/M/B suffixes). A numeric token inside an accepted span is covered only if it equals one of that claim's bound values; a number a span merely encloses is flagged. Proposed as F-5's fix; implemented because the measurement showed no explosion (below). | F-5: `s2-fabricated_metric-c28` was sweep-silent because "to peak at 17,280 refunds" was rejected (`foreign_field`) and its number sat inside the neighbouring growth claim's span. Measured before implementing: the change adds exactly one flagged token on 57 of 121 artifacts, every one the same case ("order count expanded by 41.47% to peak at 17,280 orders" extracted as one growth claim, so 17,280 was verified by nothing), and none of the "grew from X to Y" shape the owner asked about (that shape does not occur in this suite; where it does, two numbers and one bound value is a true gap, and flagging it is the honest reading). | Sweep-silent 1 → **0**, sweep-flagged 2 → 3 (fabricated_metric coverage row: 19/20 unextracted-but-flagged). Unextracted numerics per artifact 4.81 → 5.28. Clean report: the sweep now also lists `17,280 orders` (the lite model merged c27 and c28 on the clean run too). Nothing else moved. |
 | 5 | 2026-09-07 | **Compiler: the metric echo gate, abstention row M3** (`compile/compiler.py: _echoes`; docs/abstention.md §0 contract amended, M3, fixture amendment F5). The span must contain, as whole words after `norm()`, a name or alias of the metric the claim bound to; a share span may instead name a row-count metric (its C5 denominator, "of total orders"). Otherwise abstain `schema_gap`, detail `metric_echo_failed`. Evaluated last so every other abstention keeps its reason. The compiler now reads `span` for this one refusal, under the same door as changelog 2. Ruled by the owner (F-2: "we refuse the rewritten lie, we don't guess at it"). | F-2: `average return time of just 9.3 days` bound to `avg_delivery_days` (PASS at 9.305), `to reach 8,984 returns` bound to `orders` (PASS at 8,984). No deterministic rule catches the second case without also refusing every span that names no metric ("to hit 1,447,714.17"): the only signal is the unresolved word, and only the config vocabulary can say which words resolve. So the cost was measured before the ruling was applied, and it is itemised here rather than tuned away: the fixture config was **not** given new aliases (that would be the T10 move again). | fabricated_metric false accepts **2 → 0**, detected-by-abstention 17 → 19. **Exact-match detection 83 → 74** (9 lost, all to two wordings the config does not alias: `delivery performance worsened/declined` 4 flipped_direction, `averaging … days for delivery` 1 wrong_figure + 1 swapped_entity + 2 rounding_drift + 1 instruction_in_data). Abstention rate 15.6% → **25.8%**. Clean report 43 PASS / 8 UNV → **38 / 13**, still 0 FAIL; the five: `to hit 1,447,714.17`, `to reach 2,747,559.5`, `averaging 14.74 days for delivery`, `averaging 12.4 days for delivery fulfillment`, `delivery performance improved`. With perfect extraction (oracle, `test_oracle_upper_bound`) the same gate abstains 9 of 100 exact-match variants and all 15 wrong_ranking ones; the default-model clean recording drops 56 → 41 PASS (docs/eval.md Stage 6 addendum). Recoverable by the owner, if and only if the wording means the metric: `delivery performance` and `days for delivery` as aliases of `avg_delivery_days` would return 8 of the 9 detections and 3 of the 5 clean PASSes; the two no-wording spans are not recoverable by design. |
 | 6 | 2026-09-07 | **Config: the "overall" opt-in** (`tests/fixtures/olist_metrics.yml`, two aliases of `orders` commented out with the reasoning; `olist_metrics.alias-on.yml` is the same file with them on; `recount bench --config`). Ruled by the owner (F-3): fail-closed stays the default, the alias is the user's informed choice, and both rows are reported. Not a verifier change; measured twice because it interacts with changelog 5. | F-3: 15/15 wrong_ranking abstained `schema_gap`; the model writes the metric as `overall performance`. | Alias-on on the **Stage 5** verifier (before changelogs 3–5): wrong_ranking detection 0/15 → **14/15**, 1 abstained (the model wrote `commercial performance` once), false accepts 0. Alias-on on the **Stage 6** verifier (table D): 0/15 → **5/15**, 10 abstained `metric_echo_failed`, false accepts 0: only "secured the second position overall" contains the word; "followed closely in third place" contains nothing an alias can attach to, and M3 refuses the context-bound `orders`. Suite hash identical (the aliases touch no pooled span); clean report identical. Default (alias-off) row unchanged: 0/15, 15/15 abstained. |
+| 7 | 2026-09-07 | **Config: `days for delivery` is an alias of `avg_delivery_days`** in the default `tests/fixtures/olist_metrics.yml` (and the alias-on copy); `delivery performance` is a second documented opt-in, commented out with the reasoning. Ruled by the owner after table C: "averaging N days for delivery" is a literal description of the metric, so refusing it was vocabulary poverty, not caution; "delivery performance improved" does not say which measure improved. Side effect, fixed in the same entry: the fabricated_metric pool (B3, row 5) reads config aliases, so the new alias would have grown it 42 → 44 and re-sampled the suite; the suite is now generated from the frozen snapshot `bench/suite_config.yml` (I5 amended, `Paths.suite_config`, hash pinned by test). Labels c40 and c53 leave the `echo_gap` list (F5). Not a verifier change. | Changelog 5's itemised cost: 9 detections lost, 5 of them on "averaging … days for delivery". | **Exact-match detection 74 → 79** (wrong_figure 17 → 18, swapped_entity 19 → 20, rounding_drift 18 → 20, instruction_in_data 4 → 5), abstained 24 → 19, abstention rate 25.8% → **21.9%**, false accepts 0 → 0, collateral 0 → 0. Clean report 38 → **40 PASS / 0 FAIL / 11 UNV**. Alias-on (table D) 79 → 84 exact-match, wrong_ranking unchanged 5/15. The four detections still lost are `delivery performance worsened/declined` (flipped_direction 16/20), now the opt-in. Suite hash unchanged, verified by the new test. |
 
 ## 7. Results
 
@@ -155,26 +156,28 @@ verdicts identical to the sibling in 5/5; judge suppressed 0/5.
 | judge (one call per artifact) | 2.16 s | 3.70 s | 101 | recordings of the live run |
 | verification per claim (compile + SQL + policy) | 1.19 ms | 2.65 ms | 6228 | live run (replay: 0.83 / 1.47 ms) |
 
-### Table C — Stage 6 verifier (after changelogs 3–5; alias-off, the default). `bench/results/latest.json`
+### Table C — Stage 6 verifier (after changelogs 3–7; alias-off, the default). `bench/results/latest.json`
 
 Same recordings, same suite hash `fcd63c6c9739`, zero new calls. The judge columns are
 unchanged by construction (its recordings are keyed by what it saw).
 
 | class | n | distinct claims | detection | detected by abstention | false accept | coverage | abstention rate | sweep flagged | collateral false flags |
 |---|---|---|---|---|---|---|---|---|---|
-| wrong_figure | 20 | 15 | 17/20 (85%) | 0 | **0/20** | 18/20 | 26% | 2 | 0 |
-| flipped_direction | 20 | 5 | 16/20 (80%) | 0 | **0/20** | 20/20 | 26% | 0 | 0 |
-| wrong_ranking | 15 | 2 | 0/15 (0%) | 0 | **0/15** | 15/15 | 25% | 0 | 0 |
-| swapped_entity | 20 | 14 | 19/20 (95%) | 0 | **0/20** | 20/20 | 25% | 0 | 0 |
-| fabricated_metric | 20 | 17 | 0/20 | 19/20 (95%) | **0/20** | 19/20 | 27% | 1 | 0 |
-| rounding_drift | 20 | 17 | 18/20 (90%) | 0 | **0/20** | 20/20 | 26% | 0 | 0 |
-| instruction_in_data | 5 | 5 | 4/5 (80%) | 0 | **0/5** | 5/5 | 25% | 0 | 0 |
-| **exact-match classes** | 100 | 37 | 74/100 (74%) | 0 | **0/100** | 98/100 | 26% | 2 | **0** |
-| **overall** | 120 | 42 | 74/120 (62%) | 19/120 (16%) | **0/120** | 117/120 (98%) | 26% | 3 | **0** |
+| wrong_figure | 20 | 15 | 18/20 (90%) | 0 | **0/20** | 18/20 | 22% | 2 | 0 |
+| flipped_direction | 20 | 5 | 16/20 (80%) | 0 | **0/20** | 20/20 | 22% | 0 | 0 |
+| wrong_ranking | 15 | 2 | 0/15 (0%) | 0 | **0/15** | 15/15 | 21% | 0 | 0 |
+| swapped_entity | 20 | 14 | 20/20 (100%) | 0 | **0/20** | 20/20 | 22% | 0 | 0 |
+| fabricated_metric | 20 | 17 | 0/20 | 19/20 (95%) | **0/20** | 19/20 | 23% | 1 | 0 |
+| rounding_drift | 20 | 17 | 20/20 (100%) | 0 | **0/20** | 20/20 | 22% | 0 | 0 |
+| instruction_in_data | 5 | 5 | 5/5 (100%) | 0 | **0/5** | 5/5 | 22% | 0 | 0 |
+| **exact-match classes** | 100 | 37 | 79/100 (79%) | 0 | **0/100** | 98/100 | 22% | 2 | **0** |
+| **overall** | 120 | 42 | 79/120 (66%) | 19/120 (16%) | **0/120** | 117/120 (98%) | 22% | 3 | **0** |
 
-Clean report: 51 claims accepted, 4 rejected, **38 PASS / 0 FAIL / 13 UNVERIFIABLE**; sweep:
+Clean report: 51 claims accepted, 4 rejected, **40 PASS / 0 FAIL / 11 UNVERIFIABLE**; sweep:
 `27 states`, `12.55 days`, `11.41 days`, `17,280 orders`, `14.28 days`. instruction_in_data
-invariant 5/5. Verification latency is the live run's (replay: 0.86 / 1.54 ms).
+invariant 5/5. Verification latency is the live run's (replay: 0.86 / 1.54 ms). The three
+clean abstentions M3 adds over Stage 5 are `to hit 1,447,714.17`, `to reach 2,747,559.5`
+and `delivery performance improved` (the second opt-in).
 
 #### Progression, one changelog entry at a time (overall row unless stated)
 
@@ -183,7 +186,8 @@ invariant 5/5. Verification latency is the live run's (replay: 0.86 / 1.54 ms).
 | A: Stage 5 (changelog 2) | 83/100 | 0 / 2 | 17 | 15 | 117/120 | 85 | 2 / 1 | 4.00 | 15.6% | 43 / 0 / 8 |
 | + changelog 3 (F-4, level values rejected) | 83/100 | 0 / 2 | 17 | 15 | 117/120 | **0** | 2 / 1 | 4.81 | 15.6% | 43 / 0 / 8 |
 | + changelog 4 (F-5, token-to-field sweep) | 83/100 | 0 / 2 | 17 | 15 | 117/120 | 0 | 3 / **0** | 5.28 | 15.6% | 43 / 0 / 8 |
-| + changelog 5 (F-2, echo gate) = **table C** | **74/100** | 0 / **0** | **19** | **24** | 117/120 | 0 | 3 / 0 | 5.28 | **25.8%** | **38** / 0 / **13** |
+| + changelog 5 (F-2, echo gate) | **74/100** | 0 / **0** | **19** | **24** | 117/120 | 0 | 3 / 0 | 5.28 | **25.8%** | **38** / 0 / **13** |
+| + changelog 7 (alias `days for delivery`) = **table C** | **79/100** | 0 / 0 | 19 | **19** | 117/120 | 0 | 3 / 0 | 5.28 | **21.9%** | **40** / 0 / **11** |
 
 ### Table D — the F-3 opt-in, alias-on (`tests/fixtures/olist_metrics.alias-on.yml`, `bench/results/latest.alias-on.json`)
 
@@ -191,8 +195,8 @@ invariant 5/5. Verification latency is the live run's (replay: 0.86 / 1.54 ms).
 |---|---|---|---|---|---|---|
 | alias-off, Stage 5 (table A) | 0/15 | 15 (`schema_gap`, M2 "unknown metric 'overall performance'") | 0/15 | 15/15 | 83/100 | 83/120 |
 | **alias-on, Stage 5 verifier** | **14/15** | 1 (M2, the model wrote `commercial performance` once) | 0/15 | 15/15 | 97/100 | 97/120 |
-| alias-off, Stage 6 (table C, the default) | 0/15 | 15 (`schema_gap`: 14 M3 `metric_echo_failed`, 1 M2) | 0/15 | 15/15 | 74/100 | 74/120 |
-| **alias-on, Stage 6 verifier** | **5/15** | 10 (M3: "followed closely in … place" names no measure) | 0/15 | 15/15 | 79/100 | 79/120 |
+| alias-off, Stage 6 (table C, the default) | 0/15 | 15 (`schema_gap`: 14 M3 `metric_echo_failed`, 1 M2) | 0/15 | 15/15 | 79/100 | 79/120 |
+| **alias-on, Stage 6 verifier** | **5/15** | 10 (M3: "followed closely in … place" names no measure) | 0/15 | 15/15 | 84/100 | 84/120 |
 
 Nothing but the wrong_ranking row differs between alias-off and alias-on on either
 verifier; the suite hash and the clean report are identical.

@@ -177,16 +177,17 @@ metric binding the span does not echo (docs/abstention.md, ruled F-2), and the e
 rejects a comparison or growth value written as a level (F-4). Only the verdict-agreement
 column moves; recall, precision and every binding number are identical to the table above.
 
-| | 3.6-flash, Stage 5 | 3.6-flash, Stage 6 | flash-lite, Stage 5 | flash-lite, Stage 6 |
-|---|---|---|---|---|
-| verdict agreement (agree / false accept / false flag / other) | 54 / 0 / 0 / 1 | **44 / 0 / 0 / 11** | 47 / 0 / 0 / 4 | **42 / 0 / 0 / 9** |
-| of which `metric_echo_failed` on a label the fixture marks `echo_gap` (F5) | – | 9 (c16 c17 c23 c26 c34 c36 c40 c41 c53) | – | 5 (c16 c17 c23 c26 c34 … the lite model already abstained M2 on c36/c41's "commercial performance" and misses c40/c53's neighbours) |
-| other new abstention | – | 1: label c24 "a year-low" matched a ranking whose span is just those words | – | – |
-| end-to-end on `report_clean.md` (PASS / UNVERIFIABLE / FAIL) | 56 / 5 / 0 | **41 / 20 / 0** | 43 / 8 / 0 | **38 / 13 / 0** |
+| | 3.6-flash, Stage 5 | 3.6-flash, changelog 5 | 3.6-flash, changelog 7 | flash-lite, Stage 5 | flash-lite, changelog 5 | flash-lite, changelog 7 |
+|---|---|---|---|---|---|---|
+| verdict agreement (agree / false accept / false flag / other) | 54 / 0 / 0 / 1 | 44 / 0 / 0 / 11 | **46 / 0 / 0 / 9** | 47 / 0 / 0 / 4 | 42 / 0 / 0 / 9 | **44 / 0 / 0 / 7** |
+| of which `metric_echo_failed` on a label the fixture marks `echo_gap` (F5) | – | 9 | 7 (c16 c17 c23 c26 c34 c36 c41) | – | 5 | 3 (c16 c17 c26; the lite model abstains M2 on c23/c34/c36/c41's "fulfillment …"/"commercial …" wording) |
+| other new abstention | – | 1: label c24 "a year-low" matched a ranking whose span is just those words | 1 (same) | – | – | – |
+| end-to-end on `report_clean.md` (PASS / UNVERIFIABLE / FAIL) | 56 / 5 / 0 | 41 / 20 / 0 | **43 / 18 / 0** | 43 / 8 / 0 | 38 / 13 / 0 | **40 / 11 / 0** |
 
 Read: the default model writes tight spans ("11.41 days", "to 14.28 days", "a year-low")
 and binds the metric from the sentence, which is exactly the binding M3 refuses, so it
-loses fifteen clean verdicts to the echo gate where the lite model, whose spans carry
-more of the sentence, loses five. No false accept and no false flag on either model,
+loses thirteen clean verdicts to the echo gate where the lite model, whose spans carry
+more of the sentence, loses three (changelog 7 returned the two "days for delivery"
+spans on both). No false accept and no false flag on either model,
 before or after; what M3 buys (docs/benchmark.md changelog 5) is paid for in coverage,
 and this table is where the price is written down.

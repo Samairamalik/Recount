@@ -146,10 +146,11 @@ def test_recorded_numbers_match_docs_eval_md(recorded: EvalReport) -> None:
     assert s["binding"]["direction"] == (10, 10)
     assert s["binding"]["type"] == (53, 55)
     assert s["binding"]["value"] == (47, 50)
-    # Stage 6 (abstention M3): ten matched claims whose span names no config wording for the
+    # Stage 6 (abstention M3): matched claims whose span names no config wording for the
     # metric now abstain metric_echo_failed; the extractor recording is unchanged. Was
-    # {"agree": 54, "other": 1} in Stage 5 (docs/eval.md, Stage 6 addendum).
-    assert s["verdicts"] == {"agree": 44, "false_accept": 0, "false_flag": 0, "other": 11}
+    # {"agree": 54, "other": 1} in Stage 5, {44, 11} at changelog 5, {46, 9} once changelog 7
+    # aliased "days for delivery" (docs/eval.md, Stage 6 addendum).
+    assert s["verdicts"] == {"agree": 46, "false_accept": 0, "false_flag": 0, "other": 9}
 
 
 def test_recorded_sweep_catches_the_numeric_miss(recorded: EvalReport) -> None:
@@ -171,8 +172,8 @@ def test_recorded_flash_lite_numbers_match_docs_eval_md(labels: dict[str, Any]) 
     assert s["recall"] == 0.8947 and s["precision"] == 1.0 and s["span_validity"] == 1.0
     assert rep.missed == ("c1", "c18", "c24", "c29", "c30") and rep.merged == ("c28",)
     assert s["binding"]["subject"] == (28, 28) and s["binding"]["metric"] == (45, 51)
-    # Stage 5: {"agree": 47, "other": 4}; Stage 6 M3 abstains five more (docs/eval.md).
-    assert s["verdicts"] == {"agree": 42, "false_accept": 0, "false_flag": 0, "other": 9}
+    # Stage 5: {"agree": 47, "other": 4}; Stage 6 M3 abstains three more (docs/eval.md).
+    assert s["verdicts"] == {"agree": 44, "false_accept": 0, "false_flag": 0, "other": 7}
     assert rep.sweep_flagged == ("c1", "c18", "c24", "c29") and rep.sweep_silent == ()
 
 

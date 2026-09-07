@@ -26,7 +26,10 @@ CLEAN_RECORDING = FIXTURES / "extract" / "report_clean.json"
 
 @pytest.fixture(scope="session")
 def cfg() -> SemanticConfig:
-    return load_config(FIXTURES / "olist_metrics.yml")
+    """The frozen suite config (bench/suite_config.yml, the Stage 5 vocabulary): the suite's
+    pools read config aliases, so generation must never follow the live config
+    (docs/benchmark.md changelog 7). Entities are identical, so scoring uses it too."""
+    return load_config(Path("bench/suite_config.yml"))
 
 
 @pytest.fixture(scope="session")

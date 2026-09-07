@@ -30,17 +30,17 @@ Recount 0.0.1 · 121 artifacts (96 distinct) · seeds 1, 2, 3, 4, 5 · extractor
 
 | class | n | claims | detection | by abstention | false accept | coverage | abstention | sweep flagged | collateral flags | judge detection | judge false accept | judge localized |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
-| wrong_figure | 20 | 15 | 17/20 (85%) | 0/20 (0%) | 0/20 (0%) | 18/20 (90%) | 26% | 2 | 0 | 20/20 (100%) | 0/20 (0%) | 14/20 (70%) |
-| flipped_direction | 20 | 5 | 16/20 (80%) | 0/20 (0%) | 0/20 (0%) | 20/20 (100%) | 26% | 0 | 0 | 20/20 (100%) | 0/20 (0%) | 13/20 (65%) |
-| wrong_ranking | 15 | 2 | 0/15 (0%) | 0/15 (0%) | 0/15 (0%) | 15/15 (100%) | 25% | 0 | 0 | 15/15 (100%) | 0/15 (0%) | 15/15 (100%) |
-| swapped_entity | 20 | 14 | 19/20 (95%) | 0/20 (0%) | 0/20 (0%) | 20/20 (100%) | 25% | 0 | 0 | 20/20 (100%) | 0/20 (0%) | 10/20 (50%) |
-| fabricated_metric | 20 | 17 | 0/20 (0%) | 19/20 (95%) | 0/20 (0%) | 19/20 (95%) | 27% | 1 | 0 | 20/20 (100%) | 0/20 (0%) | 13/20 (65%) |
-| rounding_drift | 20 | 17 | 18/20 (90%) | 0/20 (0%) | 0/20 (0%) | 20/20 (100%) | 26% | 0 | 0 | 20/20 (100%) | 0/20 (0%) | 7/20 (35%) |
-| instruction_in_data | 5 | 5 | 4/5 (80%) | 0/5 (0%) | 0/5 (0%) | 5/5 (100%) | 25% | 0 | 0 | 5/5 (100%) | 0/5 (0%) | 5/5 (100%) |
-| **exact-match classes** | 100 | 37 | 74/100 (74%) | 0/100 (0%) | 0/100 (0%) | 98/100 (98%) | 26% | 2 | 0 | 100/100 (100%) | 0/100 (0%) | 64/100 (64%) |
-| **overall** | 120 | 42 | 74/120 (62%) | 19/120 (16%) | 0/120 (0%) | 117/120 (98%) | 26% | 3 | 0 | 120/120 (100%) | 0/120 (0%) | 77/120 (64%) |
+| wrong_figure | 20 | 15 | 18/20 (90%) | 0/20 (0%) | 0/20 (0%) | 18/20 (90%) | 22% | 2 | 0 | 20/20 (100%) | 0/20 (0%) | 14/20 (70%) |
+| flipped_direction | 20 | 5 | 16/20 (80%) | 0/20 (0%) | 0/20 (0%) | 20/20 (100%) | 22% | 0 | 0 | 20/20 (100%) | 0/20 (0%) | 13/20 (65%) |
+| wrong_ranking | 15 | 2 | 0/15 (0%) | 0/15 (0%) | 0/15 (0%) | 15/15 (100%) | 21% | 0 | 0 | 15/15 (100%) | 0/15 (0%) | 15/15 (100%) |
+| swapped_entity | 20 | 14 | 20/20 (100%) | 0/20 (0%) | 0/20 (0%) | 20/20 (100%) | 22% | 0 | 0 | 20/20 (100%) | 0/20 (0%) | 10/20 (50%) |
+| fabricated_metric | 20 | 17 | 0/20 (0%) | 19/20 (95%) | 0/20 (0%) | 19/20 (95%) | 23% | 1 | 0 | 20/20 (100%) | 0/20 (0%) | 13/20 (65%) |
+| rounding_drift | 20 | 17 | 20/20 (100%) | 0/20 (0%) | 0/20 (0%) | 20/20 (100%) | 22% | 0 | 0 | 20/20 (100%) | 0/20 (0%) | 7/20 (35%) |
+| instruction_in_data | 5 | 5 | 5/5 (100%) | 0/5 (0%) | 0/5 (0%) | 5/5 (100%) | 22% | 0 | 0 | 5/5 (100%) | 0/5 (0%) | 5/5 (100%) |
+| **exact-match classes** | 100 | 37 | 79/100 (79%) | 0/100 (0%) | 0/100 (0%) | 98/100 (98%) | 22% | 2 | 0 | 100/100 (100%) | 0/100 (0%) | 64/100 (64%) |
+| **overall** | 120 | 42 | 79/120 (66%) | 19/120 (16%) | 0/120 (0%) | 117/120 (98%) | 22% | 3 | 0 | 120/120 (100%) | 0/120 (0%) | 77/120 (64%) |
 
-Clean report: 51 claims, 38 PASS / 0 FAIL / 13 UNVERIFIABLE (false-flag rate 0%); label recall 0.8947, precision 1.0000; unextracted numerics: 27 states, 12.55 days, 11.41 days, 17,280 orders, 14.28 days; judge: unfaithful, 1 false flags.
+Clean report: 51 claims, 40 PASS / 0 FAIL / 11 UNVERIFIABLE (false-flag rate 0%); label recall 0.8947, precision 1.0000; unextracted numerics: 27 states, 12.55 days, 11.41 days, 17,280 orders, 14.28 days; judge: unfaithful, 1 false flags.
 instruction_in_data: Recount verdicts identical to the sibling variant in 5/5 (invariant by construction); judge detections suppressed by the injected cell: 0/5.
 
 | latency | p50 | p95 | n | source |

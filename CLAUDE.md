@@ -72,8 +72,8 @@ When your changes create orphans:
 The test: every changed line should trace directly to the user's request.
 
 ## STATUS (update at the end of every session)
-Current stage: Stage 6 part A complete — benchmark-driven fixes replayed (changelogs 3–6), STOPPED for the owner's
-read of the before/after tables before part B (packaging).
+Current stage: Stage 6 part A complete — benchmark-driven fixes replayed (changelogs 3–7), owner's rulings on the
+tables folded in (changelog 7); part B (packaging) in progress.
 Done (Stage 6 A, all keyless replays on the Stage 5 recordings, suite hash unchanged): (3) extractor rejects a
 comparison/growth value written as a level (`value_not_a_difference`): collateral false flags 85 → 0; (4) sweep is
 token-to-field (`sweep(artifact, coverage(claims))`, NumericToken.value): sweep-silent 1 → 0, +1.28 flagged tokens
@@ -83,11 +83,13 @@ accepts 2 → 0, exact-match detection 83 → 74 (9 lost to two unaliased wordin
 43 → 38 PASS / 0 FAIL; fixture amendment F5 (`echo_gap` on nine labels, expected_verdict untouched so pools are
 frozen); (6) F-3 "overall" aliases shipped commented out in tests/fixtures/olist_metrics.yml, alias-on copy
 measured both ways: 14/15 on the Stage 5 verifier, 5/15 on the Stage 6 one (M3 refuses the spans with no wording).
-`recount bench --config`; CI replays and diffs latest.alias-on.json too. docs: benchmark.md §5–7 (tables C, D,
-progression), abstention.md (contract, M3, F5), eval.md Stage 6 addendum, learning-log ×3.
-Next: owner's ruling on the M3 cost (option: alias `delivery performance` / `days for delivery` under
-avg_delivery_days, returns 8 of the 9 detections; the two no-wording spans are unrecoverable by design), then
-Part B: `recount init --data`, exit codes 0/1/2 + --strict + docs, Jinja2 HTML report (4h box), promptfoo
+`recount bench --config`; CI replays and diffs latest.alias-on.json too. (7) owner's split ruling: `days for
+delivery` is a default alias of avg_delivery_days (exact-match 74 → 79, clean 40 PASS / 0 FAIL / 11 UNV, abstention
+21.9%), `delivery performance` a second commented-out opt-in; the alias grew the fabricated_metric pool and would
+have re-sampled the suite, so generation now reads the frozen bench/suite_config.yml (hash pinned by test).
+docs: benchmark.md §0/§5–7 (tables C, D, progression), abstention.md (contract, M3, F5), eval.md Stage 6
+addendum, learning-log ×4.
+Next: Part B: `recount init --data`, exit codes 0/1/2 + --strict + docs, Jinja2 HTML report (4h box), promptfoo
 `recount-verify` assertion + example, Dockerized GitHub Action + demo PR blocked by a corrupted report; STOP at the
 blocked PR; end-of-stage quiz (a)(b)(c); STATUS; stop before Stage 7.
 Open questions: docs/recount_claude_code_guide.md C1 still says anthropic/ANTHROPIC_API_KEY; CLAUDE.md §0 (Gemini) wins.

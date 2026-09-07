@@ -65,7 +65,7 @@ def bench(
     paths = Paths(recordings=recordings, config=config)
     seed_tuple = _seeds(seeds)
     if dump_suite is not None:
-        cfg = load_config(paths.config)
+        cfg = load_config(paths.suite_config)
         labels = json.loads(paths.labels.read_text())["claims"]
         write_suite(
             generate(paths.clean.read_text(), labels, cfg, paths.dataset, seed_tuple), dump_suite

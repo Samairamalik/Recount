@@ -36,6 +36,13 @@ def test_same_seed_is_byte_identical(
     ]
 
 
+def test_suite_is_frozen_to_the_stage5_hash(suite: Suite) -> None:
+    """I5: the suite is generated from bench/suite_config.yml, never the live config. Stage 6
+    changelog 7 added a metric alias to the live config; through the fabricated_metric pool
+    that would have re-sampled the suite (42 -> 44 candidates) and orphaned every recording."""
+    assert suite.sha256 == "fcd63c6c9739681a9ef3accf5ee4992cd20e7959a204442416c9cf95e6e54421"
+
+
 def test_suite_shape(suite: Suite) -> None:
     assert len(suite.variants) == 120
     assert Counter(v.cls for v in suite.variants) == {

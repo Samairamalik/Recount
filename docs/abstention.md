@@ -79,8 +79,10 @@ volume named in the previous clause): both spans lack the wording and both are
 refused. The config vocabulary is the only thing allowed to turn wording into
 meaning, so the fix for a legitimate span is an alias, never a guess. Known cost:
 spans that name no metric, or name it in words the config does not alias
-("averaging 14.74 days for delivery", "delivery performance improved"), abstain;
-the benchmark measures it (docs/benchmark.md changelog 5).
+("delivery performance improved"), abstain; the benchmark measures it
+(docs/benchmark.md changelog 5). A literal phrasing the config lacked ("averaging
+14.74 days for delivery") is a vocabulary gap, fixed by an alias (changelog 7), which
+is the whole point of the row: the config, not the compiler, decides what words mean.
 
 Measure built from the resolved metric: `agg` sum/count/avg pass through;
 `agg: share` becomes `count` of rows (row X1); `column` and `round` pass through.
@@ -231,10 +233,11 @@ if the reason taxonomy ever grows.
 | F2 | c11 "took the lead", ranking | no `displaced` | `displaced: "unspecified"`, `expected_reason: unsupported_claim_type` | non-null `displaced` means the text asserts an overtaking; the sentence is precise and the tool lacks rank-change verification (G10). |
 | F3 | c23 "peak fulfillment efficiency of the year" | no `scope` | `scope: "2017"` | the span says "of the year"; the universe is stated, not inferred (G8). |
 
-| F5 *(Stage 6)* | c16, c17, c23, c26, c34, c36, c40, c41, c53 | `expected_verdict` PASS (c41: FAIL) | unchanged, plus `echo_gap: true` | under M3 these nine spans name no config wording for their metric ("to hit 1,447,714.17", "delivery performance improved", "followed closely in third place"). `expected_verdict` stays the truth of the assertion, which the benchmark pools (B3) read, so the frozen suite is byte-identical; the goldens expect `UNVERIFIABLE/schema_gap` `metric_echo_failed` on them. c41 is the spike's wrong_ranking corruption: with M3 it is abstained, not detected, and `test_every_corruption_fails_for_the_right_reason` says so. |
+| F5 *(Stage 6)* | c16, c17, c23, c26, c34, c36, c41 (c40 and c53 were on the list until changelog 7 aliased `days for delivery`) | `expected_verdict` PASS (c41: FAIL) | unchanged, plus `echo_gap: true` | under M3 these nine spans name no config wording for their metric ("to hit 1,447,714.17", "delivery performance improved", "followed closely in third place"). `expected_verdict` stays the truth of the assertion, which the benchmark pools (B3) read, so the frozen suite is byte-identical; the goldens expect `UNVERIFIABLE/schema_gap` `metric_echo_failed` on them. c41 is the spike's wrong_ranking corruption: with M3 it is abstained, not detected, and `test_every_corruption_fails_for_the_right_reason` says so. |
 
-After F1 the 57 fixtures split PASS 45 / FAIL 6 / UNVERIFIABLE 6; after F5 a correct
-verifier returns PASS 37 / FAIL 5 / UNVERIFIABLE 15 on them (nine M3 abstentions).
+After F1 the 57 fixtures split PASS 45 / FAIL 6 / UNVERIFIABLE 6; after F5 and
+changelog 7 a correct verifier returns PASS 39 / FAIL 5 / UNVERIFIABLE 13 on them
+(seven M3 abstentions).
 
 ## 4. Schema amendments (Stage 1 contracts, amended visibly)
 

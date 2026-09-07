@@ -1,0 +1,45 @@
+# FROZEN: the benchmark suite is generated from THIS config, never from the verification config.
+# It is the Stage 5 tests/fixtures/olist_metrics.yml as of commit e0b604d (suite sha fcd63c6c9739).
+# The fabricated_metric pool (docs/benchmark.md B3, row 5) is "labels whose span contains a config
+# alias", so a vocabulary change in the live config would re-sample the suite and invalidate every
+# recording. Stage 6 changelog 7 added an alias and hit exactly that; since then generate() takes
+# this snapshot (I5) and `recount bench --config` only changes what the verifier resolves against.
+# Do not edit.
+dataset: spike/data/orders.parquet
+time_column: order_date
+tolerance_rule: half_ulp
+entities:
+  state:
+    column: state
+    aliases:
+      Sao Paulo: SP
+      Rio de Janeiro: RJ
+      Minas Gerais: MG
+      Rio Grande do Sul: RS
+      Parana: PR
+      Santa Catarina: SC
+metrics:
+  revenue:
+    agg: sum
+    column: revenue
+    aliases: [revenue, total revenue, gross revenue]
+    round: 2            # SUM over DOUBLE varies ~3.5e-07 with row order (spike d6)
+    polarity: higher_is_better
+  orders:
+    agg: count
+    aliases: [orders, order volume, order count]
+    polarity: higher_is_better
+  avg_order_value:
+    agg: avg
+    column: revenue
+    aliases: [average order value]
+    polarity: higher_is_better
+  avg_delivery_days:
+    agg: avg
+    column: delivery_days   # AVG skips the 2 NULL rows
+    aliases: [average delivery time, average delivery times, average delivery turnaround, delivery time]
+    polarity: lower_is_better
+  order_share_pct:
+    agg: share
+    aliases: [order share, share of total orders, share of total order volume, percentage of orders]
+    polarity: higher_is_better

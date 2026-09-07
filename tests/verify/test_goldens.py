@@ -55,10 +55,11 @@ def test_golden_set_is_the_whole_fixture() -> None:
         "ambiguous": 3,  # c5 (D1), c7 (V5), c12 (V3)
         "unsupported_claim_type": 1,  # c11 (G10)
     }
-    # F5 (Stage 6): nine true assertions whose span names no config wording for the metric;
-    # the compiler abstains M3 on them and the benchmark pools still read expected_verdict.
+    # F5 (Stage 6): true assertions whose span names no config wording for the metric; the
+    # compiler abstains M3 on them and the benchmark pools still read expected_verdict. Nine
+    # at changelog 5; c40 and c53 ("averaging N days for delivery") left at changelog 7.
     assert sorted(r["claim"]["id"] for r in RECORDS if r.get("echo_gap")) == sorted(
-        ["c16", "c17", "c23", "c26", "c34", "c36", "c40", "c41", "c53"]
+        ["c16", "c17", "c23", "c26", "c34", "c36", "c41"]
     )
 
 

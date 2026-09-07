@@ -44,7 +44,11 @@ class BenchError(Exception):
 class Paths:
     clean: Path = Path("spike/report_clean.md")
     labels: Path = Path("tests/fixtures/labeled_claims.json")
+    # The verifier's config (what claims resolve against; `recount bench --config`).
     config: Path = Path("tests/fixtures/olist_metrics.yml")
+    # The frozen snapshot the suite is generated from (I5): the fabricated_metric pool reads
+    # config aliases, so the live vocabulary must never re-sample the suite (changelog 7).
+    suite_config: Path = Path("bench/suite_config.yml")
     dataset: Path = Path("examples/olist/orders.parquet")
     recordings: Path = Path("bench/recordings")
 
@@ -166,7 +170,7 @@ def run_bench(
     cfg = load_config(paths.config)
     labels = json.loads(paths.labels.read_text())["claims"]
     clean_text = paths.clean.read_text()
-    suite = generate(clean_text, labels, cfg, paths.dataset, seeds)
+    suite = generate(clean_text, labels, load_config(paths.suite_config), paths.dataset, seeds)
     clean_ds = load_dataset(paths.dataset, cfg)
     clean_summary = summarize(clean_ds, cfg)
     throttled = None if live is None else ThrottledClient(live, 60.0 / rpm)
@@ -279,7 +283,7 @@ def plan_calls(paths: Paths = DEFAULT_PATHS, seeds: tuple[int, ...] = SEEDS) -> 
     cfg = load_config(paths.config)
     labels = json.loads(paths.labels.read_text())["claims"]
     clean_text = paths.clean.read_text()
-    suite = generate(clean_text, labels, cfg, paths.dataset, seeds)
+    suite = generate(clean_text, labels, load_config(paths.suite_config), paths.dataset, seeds)
     extract_keys = {suite.clean_sha256} | {v.artifact_sha256 for v in suite.variants}
     clean_summary = summarize(load_dataset(paths.dataset, cfg), cfg)
     judge_keys = {_sha(judge_input(clean_text, clean_summary))}

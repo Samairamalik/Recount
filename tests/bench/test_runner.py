@@ -67,9 +67,9 @@ def test_oracle_upper_bound(tmp_path: Path, oracle: Any) -> None:
     a verifier change."""
     r = run_bench(_paths(tmp_path), live=oracle, rpm=1e9)
     rows = r["classes"]
-    echo_gap = {  # variants drawn on c17 / c40 / c53 (F5) per class
-        "wrong_figure": 1, "flipped_direction": 4, "swapped_entity": 1, "rounding_drift": 2,
-        "instruction_in_data": 1,
+    echo_gap = {  # variants drawn on c17 (F5) per class; c40 / c53 echo since changelog 7
+        "wrong_figure": 0, "flipped_direction": 4, "swapped_entity": 0, "rounding_drift": 0,
+        "instruction_in_data": 0,
     }  # fmt: skip
     for cls, gap in echo_gap.items():
         assert rows[cls]["detected"] == rows[cls]["n"] - gap, (cls, rows[cls])
@@ -81,7 +81,7 @@ def test_oracle_upper_bound(tmp_path: Path, oracle: Any) -> None:
     assert rows["instruction_in_data"]["invariant"] == 5
     assert rows["overall"]["collateral_false_flags"] == 0
     assert rows["overall"]["unextracted_total"] == 0
-    assert r["clean"]["FAIL"] == 0 and r["clean"]["PASS"] == 41  # 56 before M3
+    assert r["clean"]["FAIL"] == 0 and r["clean"]["PASS"] == 43  # 56 before M3, 41 before alias
     assert r["clean"]["judge"] == {"faithful": True, "false_flags": 0}
     assert rows["overall"]["judge_localized"] == rows["overall"]["n"]
 

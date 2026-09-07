@@ -33,7 +33,13 @@ metrics:
   avg_delivery_days:
     agg: avg
     column: delivery_days   # AVG skips the 2 NULL rows
-    aliases: [average delivery time, average delivery times, average delivery turnaround, delivery time]
+    # "days for delivery" (Stage 6, changelog 7): "averaging 14.74 days for delivery" is a literal
+    # description of this metric; refusing it was vocabulary poverty, not caution.
+    aliases: [average delivery time, average delivery times, average delivery turnaround, delivery time, days for delivery]
+    # Opt-in (Stage 6, changelog 7, like F-3): "delivery performance improved" does not say WHICH
+    # measure improved (delivery time? on-time rate?). Uncomment only if in your reports it means
+    # the average delivery time. Recount never assumes it.
+    # aliases: [average delivery time, average delivery times, average delivery turnaround, delivery time, days for delivery, delivery performance]
     polarity: lower_is_better
   order_share_pct:
     agg: share
