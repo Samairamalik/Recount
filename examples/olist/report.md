@@ -16,7 +16,7 @@ The year concluded with a record-breaking fourth quarter, propelled by seasonal 
 
 ## Regional Distribution and State Rankings
 
-Sales distribution across Brazil remained heavily concentrated in the Southeast and South regions, with six key states dominating overall platform activity. Sao Paulo served as the primary economic engine for the marketplace, generating 2,428,002.62 in revenue across 17,071 orders—representing roughly two-fifths of all orders at 39.31%. Sao Paulo also set the national benchmark for fulfillment speed, achieving a remarkably fast average delivery time of just 9.3 days.
+Sales distribution across Brazil remained heavily concentrated in the Southeast and South regions, with six key states dominating overall platform activity. Sao Paulo served as the primary economic engine for the marketplace, generating 4,228,002.62 in revenue across 17,071 orders—representing roughly two-fifths of all orders at 39.31%. Sao Paulo also set the national benchmark for fulfillment speed, achieving a remarkably fast average delivery time of just 9.3 days.
 
 Rio de Janeiro secured the second position overall, generating 1,012,943.05 in revenue from 5,968 orders, which accounted for 13.74% of total orders nationwide while averaging 14.74 days for delivery. Minas Gerais followed closely in third place, capturing a 12.07% order share with 5,240 orders that generated 825,060.95 in revenue, supported by an average delivery time of 12.08 days.
 
