@@ -72,26 +72,26 @@ When your changes create orphans:
 The test: every changed line should trace directly to the user's request.
 
 ## STATUS (update at the end of every session)
-Current stage: Stage 6 part A complete — benchmark-driven fixes replayed (changelogs 3–7), owner's rulings on the
-tables folded in (changelog 7); part B (packaging) in progress.
-Done (Stage 6 A, all keyless replays on the Stage 5 recordings, suite hash unchanged): (3) extractor rejects a
-comparison/growth value written as a level (`value_not_a_difference`): collateral false flags 85 → 0; (4) sweep is
-token-to-field (`sweep(artifact, coverage(claims))`, NumericToken.value): sweep-silent 1 → 0, +1.28 flagged tokens
-per artifact, all "17,280 orders"; (5) compiler echo gate M3 (span must name the bound metric; share may name its
-row-count denominator; evaluated last; the compiler now reads `span` for this one refusal): fabricated_metric false
-accepts 2 → 0, exact-match detection 83 → 74 (9 lost to two unaliased wordings), abstention 16% → 26%, clean
-43 → 38 PASS / 0 FAIL; fixture amendment F5 (`echo_gap` on nine labels, expected_verdict untouched so pools are
-frozen); (6) F-3 "overall" aliases shipped commented out in tests/fixtures/olist_metrics.yml, alias-on copy
-measured both ways: 14/15 on the Stage 5 verifier, 5/15 on the Stage 6 one (M3 refuses the spans with no wording).
-`recount bench --config`; CI replays and diffs latest.alias-on.json too. (7) owner's split ruling: `days for
-delivery` is a default alias of avg_delivery_days (exact-match 74 → 79, clean 40 PASS / 0 FAIL / 11 UNV, abstention
-21.9%), `delivery performance` a second commented-out opt-in; the alias grew the fabricated_metric pool and would
-have re-sampled the suite, so generation now reads the frozen bench/suite_config.yml (hash pinned by test).
-docs: benchmark.md §0/§5–7 (tables C, D, progression), abstention.md (contract, M3, F5), eval.md Stage 6
-addendum, learning-log ×4.
-Next: Part B: `recount init --data`, exit codes 0/1/2 + --strict + docs, Jinja2 HTML report (4h box), promptfoo
-`recount-verify` assertion + example, Dockerized GitHub Action + demo PR blocked by a corrupted report; STOP at the
-blocked PR; end-of-stage quiz (a)(b)(c); STATUS; stop before Stage 7.
+Current stage: Stage 6 complete pending the owner's look at the blocked demo PR (STOP 2) — parts A and B committed and
+pushed; stop before Stage 7.
+Done (Stage 6 A, all keyless replays on the Stage 5 recordings, suite hash unchanged): changelogs 3–7 in
+docs/benchmark.md §6: (3) extractor rejects a comparison/growth value written as a level (collateral false flags
+85 → 0); (4) token-to-field sweep (sweep-silent 1 → 0); (5) compiler echo gate M3, fixture amendment F5 (echo_gap;
+pools untouched): fabricated_metric false accepts 2 → 0; (6) F-3 "overall" aliases commented-out opt-in, alias-on
+replayed both ways (14/15 on Stage 5, 5/15 on Stage 6); (7) `days for delivery` default alias, `delivery
+performance` opt-in, suite generated from frozen bench/suite_config.yml (hash pinned). Final default table C:
+exact-match detection 79/100, false accepts 0, collateral 0, abstention 21.9%, clean 40 PASS / 0 FAIL / 11 UNV.
+Done (Stage 6 B): `recount verify` (--json/--html/--md/--strict/--annotations; --claims fully offline,
+--recording/--recordings keyless replay), exit codes 0/1/2 with one-sentence exit-2 messages citing YAML lines
+(docs/cli.md); `recount init --data` commented template (config/template.py); report/ (run record with hashes and
+timings, Rich + Markdown tables, Jinja2 static HTML with evidence drawer + YAML stubs); pipeline.verify_text with
+partial results on a crashed claim; adapters/promptfoo.get_assert + examples/promptfoo worked example; docker
+action.yml + Dockerfile + .github/workflows/verify-reports.yml (replays committed recordings: keys never in PR CI);
+examples/olist/{report.md,metrics.yml}; README quickstart reproduced from a clean-venv wheel install. Demo PR #1
+(demo/corrupted-report: Sao Paulo revenue 2,428,002.62 → 4,228,002.62, variant s1-wrong_figure-c31).
+Next: Stage 7 — Hypothesis suites (no-false-accept, round-trip truth, instruction-in-data invariance, byte-identical
+determinism), hostile-input tests, docs/design.md, demo GIF, v0.1 tag; gate G5 = PRD §1.16. Deployment note: mark
+verify-reports required in branch protection + CODEOWNERS on .github/ and action.yml (T9), owner's call.
 Open questions: docs/recount_claude_code_guide.md C1 still says anthropic/ANTHROPIC_API_KEY; CLAUDE.md §0 (Gemini) wins.
 Known false-PASS path (documented, abstention P12): periods partly outside the data range compute over
 the rows present; V2 engine TODO queries min/max of time_column and abstains no_data. G7 (year rankings
