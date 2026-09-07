@@ -15,8 +15,11 @@ compile_claim(claim: Claim, cfg: SemanticConfig) -> ComputePlan | Abstain
 Abstain(reason: AbstainReason, detail: str)      # frozen
 ```
 
-- Deterministic, pure. Reads only the Claim's typed fields; never `span`, never
-  the dataset, never the clock. No LLM (wall 1), no SQL (wall 2).
+- Deterministic, pure. Reads the Claim's typed fields; never the dataset, never
+  the clock. No LLM (wall 1), no SQL (wall 2). *(Amended Stage 6, ruling F-2.)* `span`
+  is read for exactly one check, the metric echo M3: it is verbatim artifact text the
+  extractor validated, the door changelog 2 opened for `stated_decimals`. Nothing else
+  reads it, and nothing is ever *inferred* from it: M3 can only refuse a binding.
 - Everything resolvable is resolved through `SemanticConfig` only. The config
   defines meaning; it never caches facts about the data (no coverage fields).
 - `detail` is a one-line, user-facing diagnostic naming the offending field and,
@@ -41,7 +44,10 @@ So "São Paulo", "sao paulo" and "SAO  PAULO" all equal "sao paulo".
 4. **D** / **V1–V5** direction and vagueness
 5. **P** period parsing (period, baseline, scope)
 6. **V6** and **G8/G11**: checks that need parsed intervals
-7. build the plan; **N** rows are raised by the engine at verify time
+7. **M3** the echo gate *(Stage 6)*: last, so an abstention for any other reason
+   keeps its more specific diagnostic; a binding is only refused where a plan
+   would otherwise be built from it
+8. build the plan; **N** rows are raised by the engine at verify time
 
 Schema gaps are reported before vagueness on purpose: a `schema_gap` is the one
 abstention the user can fix in YAML, and once fixed the vagueness row (if any)
@@ -63,6 +69,18 @@ Stage 3 unit test constructs the claim/config.
 |---|---|---|---|---|---|
 | M1 | `norm(metric)` equals `norm(name)` or `norm(alias)` of exactly one config metric | plan (continue) | — | — | c2 `orders`, c3 `revenue`, and every other fixture |
 | M2 | no config metric matches | abstain | `schema_gap` | `unknown metric '{metric}'; config metrics: {names}` | c1 `state_count` (F1) |
+| M3 *(Stage 6, ruled F-2; evaluated last, step 7)* | the span contains no name or alias of the metric M1 bound, as whole words after `norm()`. A `share` span may instead name a row-count metric (`agg: count`, no column): that is the share's denominator by C5 ("13.74% of total orders"). | abstain | `schema_gap` | `metric_echo_failed: nothing in the span resolves to '{name}' (bound from metric '{metric}'); if the span's wording means '{name}', add it under metrics.{name}.aliases` | benchmark `s1-fabricated_metric-c35` "average return time of just 9.3 days" bound to `avg_delivery_days`; `s2-fabricated_metric-c14` "to reach 8,984 returns" bound to `orders`; fixtures marked `echo_gap` (F5) |
+
+M3 rationale: the extractor binds `metric` from context, and context is where a
+rewritten metric gets laundered into a real one (docs/benchmark.md F-2: two of twenty
+fabricated metrics reached PASS). The compiler cannot tell "to hit 1,447,714.17"
+(revenue named in the previous clause) from "to reach 8,984 returns" (a lie, order
+volume named in the previous clause): both spans lack the wording and both are
+refused. The config vocabulary is the only thing allowed to turn wording into
+meaning, so the fix for a legitimate span is an alias, never a guess. Known cost:
+spans that name no metric, or name it in words the config does not alias
+("averaging 14.74 days for delivery", "delivery performance improved"), abstain;
+the benchmark measures it (docs/benchmark.md changelog 5).
 
 Measure built from the resolved metric: `agg` sum/count/avg pass through;
 `agg: share` becomes `count` of rows (row X1); `column` and `round` pass through.
@@ -213,7 +231,10 @@ if the reason taxonomy ever grows.
 | F2 | c11 "took the lead", ranking | no `displaced` | `displaced: "unspecified"`, `expected_reason: unsupported_claim_type` | non-null `displaced` means the text asserts an overtaking; the sentence is precise and the tool lacks rank-change verification (G10). |
 | F3 | c23 "peak fulfillment efficiency of the year" | no `scope` | `scope: "2017"` | the span says "of the year"; the universe is stated, not inferred (G8). |
 
-After F1 the 57 fixtures split PASS 45 / FAIL 6 / UNVERIFIABLE 6.
+| F5 *(Stage 6)* | c16, c17, c23, c26, c34, c36, c40, c41, c53 | `expected_verdict` PASS (c41: FAIL) | unchanged, plus `echo_gap: true` | under M3 these nine spans name no config wording for their metric ("to hit 1,447,714.17", "delivery performance improved", "followed closely in third place"). `expected_verdict` stays the truth of the assertion, which the benchmark pools (B3) read, so the frozen suite is byte-identical; the goldens expect `UNVERIFIABLE/schema_gap` `metric_echo_failed` on them. c41 is the spike's wrong_ranking corruption: with M3 it is abstained, not detected, and `test_every_corruption_fails_for_the_right_reason` says so. |
+
+After F1 the 57 fixtures split PASS 45 / FAIL 6 / UNVERIFIABLE 6; after F5 a correct
+verifier returns PASS 37 / FAIL 5 / UNVERIFIABLE 15 on them (nine M3 abstentions).
 
 ## 4. Schema amendments (Stage 1 contracts, amended visibly)
 
@@ -230,3 +251,6 @@ After F1 the 57 fixtures split PASS 45 / FAIL 6 / UNVERIFIABLE 6.
   G7 (year rankings withheld) is the compiler-side stopgap until then.
 - **V3, direction-only growth** is abstained along with vague growth (schema cannot tell them apart).
 - **Rank change** (G10): "overtook" claims need two rankings and a comparison of ranks; not supported.
+- **M3 and context-bound metrics** (Stage 6): a span that names no metric can never
+  compile, whatever the surrounding sentence says. This is deliberate (F-2), and it is
+  the reason the F-3 "overall" alias recovers only spans that contain the word.

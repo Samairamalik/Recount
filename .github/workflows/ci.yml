@@ -12,5 +12,6 @@ jobs:
       - run: uv run mypy
       - run: uv run pytest
       - run: uv run recount bench --write-readme   # replay mode: recorded responses, no key (C3)
-      - run: git diff --exit-code README.md bench/results/latest.json   # committed numbers must reproduce (C4)
+      - run: uv run recount bench --config tests/fixtures/olist_metrics.alias-on.yml --out bench/results/latest.alias-on.json   # F-3 opt-in row
+      - run: git diff --exit-code README.md bench/results/latest.json bench/results/latest.alias-on.json   # committed numbers must reproduce (C4)
       - run: uv run pip-audit || true   # advisory until deps stabilize

@@ -57,22 +57,31 @@ def test_missing_recording_is_an_error_not_a_skip(tmp_path: Path) -> None:
 
 
 def test_oracle_upper_bound(tmp_path: Path, oracle: Any) -> None:
-    """With perfect extraction every value, direction, ordinal and entity corruption is
-    FAIL, every fabricated metric abstains schema_gap, and class 7 is invariant. Before
-    changelog 2 three rounding_drift variants written with trailing zeros ("6.00%",
-    "12.10 days", "5.00%") PASSed (finding F-1). Any change here is a verifier change."""
+    """With perfect extraction every fabricated metric abstains schema_gap, class 7 is
+    invariant, and every value, direction, ordinal and entity corruption is FAIL *unless
+    its span names no config wording for the metric* (Stage 6, abstention M3 / fixture
+    amendment F5): those abstain metric_echo_failed even when handed the corruption, which
+    is the echo gate's cost with perfect extraction. Before changelog 2 three
+    rounding_drift variants written with trailing zeros ("6.00%", "12.10 days", "5.00%")
+    PASSed (F-1); before changelog 5 the echo rows below were all n/n. Any change here is
+    a verifier change."""
     r = run_bench(_paths(tmp_path), live=oracle, rpm=1e9)
     rows = r["classes"]
-    for cls in ("wrong_figure", "flipped_direction", "swapped_entity", "rounding_drift",
-                "instruction_in_data"):  # fmt: skip
-        assert rows[cls]["detected"] == rows[cls]["n"], (cls, rows[cls])
+    echo_gap = {  # variants drawn on c17 / c40 / c53 (F5) per class
+        "wrong_figure": 1, "flipped_direction": 4, "swapped_entity": 1, "rounding_drift": 2,
+        "instruction_in_data": 1,
+    }  # fmt: skip
+    for cls, gap in echo_gap.items():
+        assert rows[cls]["detected"] == rows[cls]["n"] - gap, (cls, rows[cls])
+        assert rows[cls]["abstained"] == gap and rows[cls]["false_accept"] == 0, (cls, rows[cls])
     assert rows["fabricated_metric"]["detected_by_abstention"] == rows["fabricated_metric"]["n"]
-    wr = rows["wrong_ranking"]
-    assert (wr["detected"], wr["unextracted"], wr["false_accept"]) == (15, 0, 0)
+    wr = rows["wrong_ranking"]  # c36 / c41 spans name no measure: all abstain under M3
+    assert (wr["detected"], wr["abstained"], wr["unextracted"], wr["false_accept"]) == (0, 15, 0, 0)
     assert rows["exact_match"]["false_accept"] == 0
     assert rows["instruction_in_data"]["invariant"] == 5
     assert rows["overall"]["collateral_false_flags"] == 0
-    assert r["clean"]["FAIL"] == 0 and r["clean"]["PASS"] == 56
+    assert rows["overall"]["unextracted_total"] == 0
+    assert r["clean"]["FAIL"] == 0 and r["clean"]["PASS"] == 41  # 56 before M3
     assert r["clean"]["judge"] == {"faithful": True, "false_flags": 0}
     assert rows["overall"]["judge_localized"] == rows["overall"]["n"]
 

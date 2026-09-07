@@ -1,6 +1,11 @@
-"""Numeric sweep (deterministic): every number in the artifact that no accepted claim's
-span covers is reported as unextracted, so a missed claim is a visible gap, never a
+"""Numeric sweep (deterministic): every number in the artifact that no accepted claim
+verifies is reported as unextracted, so a missed claim is a visible gap, never a
 silent one.
+
+Token-to-field coverage (Stage 6, docs/benchmark.md changelog 4): a numeric token inside an
+accepted span is covered only if it equals one of that claim's bound values (`value`, or
+`rank`); a second number a span merely encloses ("expanded by 41.47% to peak at 17,280
+orders" extracted as one growth claim) is flagged, because nothing verifies it.
 
 Recognised tokens: optional currency prefix (R$, $, €, £, ₹), Western (1,447,714.17)
 and Indian (1,41,834) digit grouping, decimals, a % sign, K/M/B/bn/mn suffixes. Bare
@@ -11,8 +16,12 @@ years, not quantities, and are skipped. Numbers written as words ("two-fifths",
 
 from __future__ import annotations
 
+import math
 import re
+from collections.abc import Iterable
 from dataclasses import dataclass
+
+from recount.claims import Claim
 
 _TOKEN = re.compile(
     r"""
@@ -26,6 +35,9 @@ _TOKEN = re.compile(
     re.VERBOSE,
 )
 _NEXT_WORD = re.compile(r"\s+([A-Za-z]+)")
+_SCALE = {"K": 1e3, "M": 1e6, "B": 1e9, "bn": 1e9, "mn": 1e6}
+
+Coverage = tuple[str, tuple[float, ...]]  # (accepted span, the values its claim binds)
 
 
 @dataclass(frozen=True)
@@ -34,6 +46,7 @@ class NumericToken:
     start: int  # character offsets in the artifact, half-open
     end: int
     context: str  # the token plus the following word, e.g. "9.3 days"
+    value: float  # the token as a number: "1.2M" -> 1200000.0, "12.4%" -> 12.4
 
 
 def numeric_tokens(artifact: str) -> tuple[NumericToken, ...]:
@@ -50,8 +63,19 @@ def numeric_tokens(artifact: str) -> tuple[NumericToken, ...]:
             continue  # a year
         after = _NEXT_WORD.match(artifact, m.end())
         context = m[0] + (" " + after[1] if after else "")
-        tokens.append(NumericToken(m[0], m.start(), m.end(), context))
+        value = float(number.replace(",", "")) * _SCALE.get(m["suffix"] or "", 1.0)
+        tokens.append(NumericToken(m[0], m.start(), m.end(), context, value))
     return tuple(tokens)
+
+
+def coverage(claims: Iterable[Claim]) -> tuple[Coverage, ...]:
+    """What each accepted claim covers: its span and the numbers it binds."""
+    out: list[Coverage] = []
+    for c in claims:
+        bound = [float(v) for v in (getattr(c, "value", None), getattr(c, "rank", None))
+                 if v is not None]  # fmt: skip
+        out.append((c.span, tuple(bound)))
+    return tuple(out)
 
 
 def span_intervals(artifact: str, spans: tuple[str, ...]) -> tuple[tuple[int, int], ...]:
@@ -65,11 +89,17 @@ def span_intervals(artifact: str, spans: tuple[str, ...]) -> tuple[tuple[int, in
     return tuple(out)
 
 
-def sweep(artifact: str, spans: tuple[str, ...]) -> tuple[NumericToken, ...]:
-    """Numeric tokens not inside any occurrence of any accepted span."""
-    covered = span_intervals(artifact, spans)
+def sweep(artifact: str, covered: Iterable[Coverage]) -> tuple[NumericToken, ...]:
+    """Numeric tokens that no accepted claim verifies: outside every span occurrence, or
+    inside one without equalling a value that claim binds."""
+    fields = [
+        (a, b, values) for span, values in covered for a, b in span_intervals(artifact, (span,))
+    ]
     return tuple(
         t
         for t in numeric_tokens(artifact)
-        if not any(a <= t.start and t.end <= b for a, b in covered)
+        if not any(
+            a <= t.start and t.end <= b and any(math.isclose(t.value, v) for v in values)
+            for a, b, values in fields
+        )
     )

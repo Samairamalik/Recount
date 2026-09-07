@@ -18,10 +18,18 @@ from recount.extract.extractor import (
     wire_schema,
 )
 from recount.extract.prompt import PROMPT
-from recount.extract.sweep import NumericToken, numeric_tokens, span_intervals, sweep
+from recount.extract.sweep import (
+    Coverage,
+    NumericToken,
+    coverage,
+    numeric_tokens,
+    span_intervals,
+    sweep,
+)
 
 __all__ = [
     "MODEL",
+    "Coverage",
     "PROMPT",
     "WIRE_SCHEMA",
     "ExtractError",
@@ -32,6 +40,7 @@ __all__ = [
     "NumericToken",
     "RecordingClient",
     "Rejected",
+    "coverage",
     "extract_claims",
     "fingerprint",
     "numeric_tokens",

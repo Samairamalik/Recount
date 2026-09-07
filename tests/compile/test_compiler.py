@@ -52,47 +52,62 @@ def fixture(cid: str) -> Claim:
     )
 
 
+def echoed(cid: str) -> Claim:
+    """A fixture claim whose span is prefixed with its metric name, so the M3 echo gate
+    (Stage 6) lets the row under test decide. Fixture spans marked echo_gap (F5) would
+    otherwise abstain M3 last."""
+    c = fixture(cid)
+    return c.model_copy(update={"span": f"{c.metric} {c.span}"})
+
+
 def without_polarity(cfg: SemanticConfig, name: str) -> SemanticConfig:
     metrics = dict(cfg.metrics)
     metrics[name] = metrics[name].model_copy(update={"polarity": None})
     return cfg.model_copy(update={"metrics": metrics})
 
 
+# Synthetic spans echo their metric ("revenue s") so the M3 echo gate lets the row under
+# test decide; M3 itself is tested at the end.
 def pv(metric: str = "revenue", value: float | None = 1.0, **kw: Any) -> PointValue:
-    base: dict[str, Any] = {"id": "t", "span": "s", "confidence": "high", "period": "2017"}
+    base: dict[str, Any] = {"id": "t", "span": f"{metric} s", "confidence": "high",
+                            "period": "2017"}  # fmt: skip
     return PointValue(type="point_value", metric=metric, value=value, **(base | kw))
+
+
+def _echoing(fields: dict[str, Any]) -> dict[str, Any]:
+    return {"span": f"{fields['metric']} s", **fields}
 
 
 def growth(**kw: Any) -> Growth:
     base: dict[str, Any] = {
-        "id": "t", "span": "s", "confidence": "high", "metric": "orders", "value": 10.0,
+        "id": "t", "confidence": "high", "metric": "orders", "value": 10.0,
         "direction": "increase", "period": "2017-Q2", "baseline_period": "2017-Q1",
     }  # fmt: skip
-    return Growth(type="growth", **(base | kw))
+    return Growth(type="growth", **_echoing(base | kw))
 
 
 def cmp(**kw: Any) -> Comparison:
     base: dict[str, Any] = {
-        "id": "t", "span": "s", "confidence": "high", "metric": "avg_delivery_days", "value": None,
+        "id": "t", "confidence": "high", "metric": "avg_delivery_days", "value": None,
         "direction": "lower", "period": "2017-Q2", "baseline_period": "2017-Q1",
     }  # fmt: skip
-    return Comparison(type="comparison", **(base | kw))
+    return Comparison(type="comparison", **_echoing(base | kw))
 
 
 def rank(**kw: Any) -> Ranking:
     base: dict[str, Any] = {
-        "id": "t", "span": "s", "confidence": "high", "metric": "orders", "rank": 1,
+        "id": "t", "confidence": "high", "metric": "orders", "rank": 1,
         "group_by": "state", "subject": "Sao Paulo", "period": "2017",
     }  # fmt: skip
-    return Ranking(type="ranking", **(base | kw))
+    return Ranking(type="ranking", **_echoing(base | kw))
 
 
 def share(**kw: Any) -> Share:
     base: dict[str, Any] = {
-        "id": "t", "span": "s", "confidence": "high", "metric": "order_share_pct", "value": 39.31,
+        "id": "t", "confidence": "high", "metric": "order_share_pct", "value": 39.31,
         "subject": "Sao Paulo", "period": "2017",
     }  # fmt: skip
-    return Share(type="share", **(base | kw))
+    return Share(type="share", **_echoing(base | kw))
 
 
 def abstains(claim: Claim, reason: AbstainReason, detail: str, cfg: SemanticConfig = CFG) -> None:
@@ -145,7 +160,7 @@ def test_binding_b_time_grain_group_by_resolves_from_time_column_never_entities(
     avg_delivery_days. No entities dimension is named 'quarter' (C3 forbids it), and
     the claim still compiles, keyed on the time column."""
     assert "quarter" not in CFG.entities
-    plan = compile_claim(fixture("c23"), CFG)
+    plan = compile_claim(echoed("c23"), CFG)
     assert plan == RankPlan(
         time_column="order_date",
         measure=Measure(agg="avg", column="delivery_days"),
@@ -157,7 +172,7 @@ def test_binding_b_time_grain_group_by_resolves_from_time_column_never_entities(
 
 
 def test_g2_entity_ranking_keys_on_the_dimension_column() -> None:
-    plan = compile_claim(fixture("c36"), CFG)
+    plan = compile_claim(echoed("c36"), CFG)
     assert isinstance(plan, RankPlan)
     assert plan.group_by == EntityKey(column="state") and plan.subject_key == "RJ"
     assert plan.period == Y2017 and plan.polarity == "higher_is_better"
@@ -242,7 +257,7 @@ def test_binding_a_better_worse_without_polarity_is_schema_gap() -> None:
     """Learning-log Stage 3 requirement (a), abstention D2: c17 'delivery performance
     improved' is only checkable because the config says lower avg_delivery_days is
     better. Remove the polarity and the compiler must abstain, never default."""
-    improved = fixture("c17")
+    improved = echoed("c17")
     plan = compile_claim(improved, CFG)  # D3
     assert isinstance(plan, ComparePlan) and plan.polarity == "lower_is_better"
     abstains(
@@ -360,6 +375,52 @@ def test_p11_overlapping_earlier_baseline_compiles() -> None:
 
 
 # ------------------------------------------------------------------ determinism
+
+
+# ------------------------------------------------------------------ M3 (Stage 6, F-2)
+
+
+def test_m3_span_must_echo_the_bound_metric() -> None:
+    """The two Stage 5 false accepts: a rewritten metric bound to a real one from context."""
+    abstains(
+        pv(
+            "average delivery time",
+            9.3,
+            span="average return time of just 9.3 days",
+            subject="Sao Paulo",
+        ),  # fmt: skip
+        AbstainReason.SCHEMA_GAP,
+        "metric_echo_failed: nothing in the span resolves to 'avg_delivery_days'",
+    )
+    abstains(
+        pv("order volume", 8984, span="to reach 8,984 returns", period="2017-Q2"),
+        AbstainReason.SCHEMA_GAP,
+        "add it under metrics.orders.aliases",
+    )
+    # no wording at all is refused the same way: the binding came from outside the span
+    abstains(pv("revenue", 1447714.17, span="to hit 1,447,714.17"), AbstainReason.SCHEMA_GAP,
+             "metric_echo_failed")  # fmt: skip
+    # any alias of the bound metric, whole-word under norm(), satisfies the echo
+    for span in ("Total Revenue of 1.0", "gross  revenue 1.0", "REVENUE: 1.0"):
+        assert isinstance(compile_claim(pv("revenue", 1.0, span=span), CFG), AggregatePlan), span
+    # a substring is not a word: "orders" does not echo "borders"
+    abstains(pv("orders", 5, span="5 borders"), AbstainReason.SCHEMA_GAP, "metric_echo_failed")
+
+
+def test_m3_share_span_may_name_the_row_count_metric() -> None:
+    """'13.74% of total orders' names the share's denominator (C5), not another metric."""
+    plan = compile_claim(share(span="accounted for 13.74% of total orders nationwide"), CFG)
+    assert isinstance(plan, SharePlan)
+    abstains(share(span="accounted for 13.74% of total revenue"), AbstainReason.SCHEMA_GAP,
+             "metric_echo_failed")  # fmt: skip
+
+
+def test_m3_is_the_last_gate_so_other_reasons_survive() -> None:
+    # vague and unechoed: the vagueness row answers first (V3), as the table orders it
+    abstains(growth(value=None, span="nearly doubled"), AbstainReason.AMBIGUOUS,
+             "no stated growth magnitude")  # fmt: skip
+    # unknown metric: M2 before M3
+    abstains(pv("state_count", 27, span="27 states"), AbstainReason.SCHEMA_GAP, "unknown metric")
 
 
 def test_compilation_is_deterministic() -> None:

@@ -4,7 +4,8 @@ from __future__ import annotations
 
 import pytest
 
-from recount.extract import numeric_tokens, span_intervals, sweep
+from recount.claims import ClaimAdapter
+from recount.extract import coverage, numeric_tokens, span_intervals, sweep
 
 
 @pytest.mark.parametrize(
@@ -47,8 +48,36 @@ def test_span_intervals_cover_every_occurrence() -> None:
 
 def test_sweep_reports_only_uncovered_tokens() -> None:
     art = "Revenue was 1,234.50 across 20 orders in 3 states; 20 orders again."
-    left = sweep(art, ("was 1,234.50", "across 20 orders"))
+    left = sweep(art, (("was 1,234.50", (1234.5,)), ("across 20 orders", (20.0,))))
     assert [t.context for t in left] == ["3 states", "20 orders"]
-    assert (
-        sweep(art, ("Revenue was 1,234.50 across 20 orders in 3 states; 20 orders again.",)) == ()
-    )
+    whole = "Revenue was 1,234.50 across 20 orders in 3 states; 20 orders again."
+    assert [t.context for t in sweep(art, ((whole, (1234.5, 20.0, 3.0)),))] == []
+
+
+def test_token_values_scale_suffixes() -> None:
+    text = "1.2M and 10K and 2bn and 12.4% and R$1,447,714.17"
+    assert [t.value for t in numeric_tokens(text)] == [1_200_000.0, 10_000.0, 2e9, 12.4, 1447714.17]
+
+
+def _claim(**fields: object) -> object:
+    return ClaimAdapter.validate_python({"id": "c1", "confidence": "high", "period": "2017-Q4",
+                                         **fields})  # fmt: skip
+
+
+def test_token_to_field_coverage_flags_a_number_a_span_merely_encloses() -> None:
+    """Stage 6, F-5 (docs/benchmark.md changelog 4): a growth claim whose span swallowed the
+    neighbouring figure verifies 41.47 only; 17,280 is flagged until a claim binds it."""
+    art = "order count expanded by 41.47% to peak at 17,280 orders."
+    merged = _claim(type="growth", span="order count expanded by 41.47% to peak at 17,280 orders",
+                    metric="orders", value=41.47, direction="increase",
+                    baseline_period="2017-Q3")  # fmt: skip
+    assert coverage([merged]) == ((merged.span, (41.47,)),)  # type: ignore[attr-defined]
+    assert [t.context for t in sweep(art, coverage([merged]))] == ["17,280 orders"]
+    level = _claim(type="point_value", span="to peak at 17,280 orders", metric="orders",
+                   value=17280)  # fmt: skip
+    assert sweep(art, coverage([merged, level])) == ()
+    # a ranking binds its rank, nothing else
+    third = _claim(type="ranking", span="3rd of 27 states", metric="orders", rank=3,
+                   group_by="state", subject="SP")  # fmt: skip
+    assert coverage([third]) == (("3rd of 27 states", (3.0,)),)
+    assert [t.context for t in sweep("SP was 3rd of 27 states", coverage([third]))] == ["27 states"]

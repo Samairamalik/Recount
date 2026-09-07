@@ -10,7 +10,7 @@ from recount.bench.corrupt import Variant
 from recount.bench.metrics import class_rows, hit_claim, judge_score, percentiles, score
 from recount.claims import ClaimAdapter
 from recount.config import SemanticConfig
-from recount.extract import Extraction, sweep
+from recount.extract import Extraction, coverage, sweep
 from recount.verify import Verdict
 
 CLEAN = "Sao Paulo generated 2,428,002.62 in revenue across 17,071 orders in 2017."
@@ -60,7 +60,7 @@ def _extraction(artifact: str, *claims: Any) -> Extraction:
     return Extraction(
         claims=tuple(claims),
         rejected=(),
-        unextracted_numeric=sweep(artifact, tuple(c.span for c in claims)),
+        unextracted_numeric=sweep(artifact, coverage(claims)),
         raw="",
         model="t",
     )
@@ -125,7 +125,9 @@ def test_outcomes(cfg: SemanticConfig) -> None:
     # not extracted: the corrupted number is uncovered, so the sweep flags it
     s = score(WF, _extraction(WF.artifact, other), (_verdict("b", "PASS"),), cfg)
     assert s.outcome == "unextracted_sweep_flagged"
-    # covered by a claim that does not carry the corruption, and not in the sweep either
+    # covered by a claim that does not carry the corruption: before F-5 (docs/benchmark.md
+    # changelog 4) the span hid the number from the sweep (sweep_silent); token-to-field
+    # coverage flags it because the claim binds 2428002.62, not the 4,228,002.62 it encloses
     wide = _claim(
         id="w",
         type="point_value",
@@ -134,7 +136,7 @@ def test_outcomes(cfg: SemanticConfig) -> None:
         value=2428002.62,
     )
     s = score(WF, _extraction(WF.artifact, wide), (_verdict("w", "PASS"),), cfg)
-    assert s.outcome == "unextracted_sweep_silent"
+    assert s.outcome == "unextracted_sweep_flagged"
 
 
 def test_fabricated_metric_abstention_is_its_own_outcome(cfg: SemanticConfig) -> None:

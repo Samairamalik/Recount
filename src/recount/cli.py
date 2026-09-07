@@ -48,6 +48,9 @@ def bench(
     recordings: Annotated[Path, typer.Option(help="Recorded responses directory.")] = Path(
         "bench/recordings"
     ),
+    config: Annotated[
+        Path, typer.Option(help="Semantic config the verifier runs with (F-3: an alias-on copy).")
+    ] = Paths.config,
     rpm: Annotated[float, typer.Option(help="Live calls per minute (C6).")] = 10.0,
     model: Annotated[
         str | None, typer.Option(help="Live model for extractor AND judge (default: the pin).")
@@ -59,7 +62,7 @@ def bench(
     ] = None,
 ) -> None:
     """Run the corruption benchmark (docs/benchmark.md)."""
-    paths = Paths(recordings=recordings)
+    paths = Paths(recordings=recordings, config=config)
     seed_tuple = _seeds(seeds)
     if dump_suite is not None:
         cfg = load_config(paths.config)

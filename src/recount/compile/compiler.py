@@ -3,12 +3,15 @@
 The specification is docs/abstention.md; every branch below cites its row id and
 the code must match the table exactly. When the table has no row for a situation
 the compiler abstains rather than guesses. Deterministic and pure: it reads the
-claim's typed fields only (never `span`), resolves everything through the config,
-and never touches the dataset or the clock. No LLM (wall 1), no SQL (wall 2).
+claim's typed fields, resolves everything through the config, and never touches the
+dataset or the clock. `span` is read for exactly one check, the metric echo (M3,
+Stage 6): it is verbatim artifact text that the extractor validated, the door
+changelog 2 opened for `stated_decimals`. No LLM (wall 1), no SQL (wall 2).
 """
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 
 from recount.claims import AbstainReason, Claim, Comparison, Growth, PointValue, Ranking, Share
@@ -47,6 +50,24 @@ class Abstain:
 
 
 def compile_claim(claim: Claim, cfg: SemanticConfig) -> ComputePlan | Abstain:
+    plan = _compile(claim, cfg)
+    if isinstance(plan, Abstain):
+        return plan
+    # M3 — the echo gate, last before a plan leaves: the span must name the metric the
+    # claim bound to (F-2). Evaluated last so an abstention for any other reason keeps
+    # the more specific diagnostic.
+    name = metric_index(cfg)[norm(claim.metric)]
+    if not _echoes(claim, cfg, name):
+        return Abstain(
+            _SCHEMA_GAP,
+            f"metric_echo_failed: nothing in the span resolves to '{name}' (bound from metric"
+            f" '{claim.metric}'); if the span's wording means '{name}', add it under"
+            f" metrics.{name}.aliases",
+        )
+    return plan
+
+
+def _compile(claim: Claim, cfg: SemanticConfig) -> ComputePlan | Abstain:
     # M1 / M2 — metric first: a schema gap is the abstention the user can fix in YAML.
     name = metric_index(cfg).get(norm(claim.metric))
     if name is None:
@@ -229,6 +250,24 @@ def _ranking(
         group_by=key,
         subject_key=period.start.isoformat(),
         polarity=metric.polarity,
+    )
+
+
+def _echoes(claim: Claim, cfg: SemanticConfig, name: str) -> bool:
+    """M3: does the span contain, as whole words after norm(), a name or alias of the
+    metric the claim bound to? The extractor can bind a rewritten metric ("average return
+    time") to a real one from context (F-2, two false accepts); the config vocabulary is the
+    only thing that may turn wording into a metric, so unknown wording abstains. A share
+    span may instead name a row-count metric (agg count, no column): that is the share's
+    denominator by C5 ("13.74% of total orders")."""
+    text = norm(claim.span)
+    wanted = {name}
+    if isinstance(claim, Share):
+        wanted |= {n for n, m in cfg.metrics.items() if m.agg == "count" and m.column is None}
+    return any(
+        re.search(rf"(?<!\w){re.escape(alias)}(?!\w)", text)
+        for alias, owner in metric_index(cfg).items()
+        if owner in wanted
     )
 
 

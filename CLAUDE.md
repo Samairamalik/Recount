@@ -72,31 +72,27 @@ When your changes create orphans:
 The test: every changed line should trace directly to the user's request.
 
 ## STATUS (update at the end of every session)
-Current stage: Stage 5 complete — corruption benchmark + judge baseline (measured, committed, CI keyless)
-Done: src/recount/bench/ — corrupt.py (seven seeded generators on the frozen taxonomy, 120 variants +
-clean, seeds 1–5, byte-identical; class 7 is composite: a wrong_figure artifact + one injected cell),
-summary.py (the judge's deterministic aggregate summary, fixed SQL), baseline_judge.py (the only
-eval-only AI; same ExtractorClient seam, recorded/replayed like the extractor), metrics.py (M1 hit rule,
-M2 outcomes, M11 rows), runner.py (recordings keyed by sha of what the model saw, resumable, throttled;
-README table between BENCH markers; results JSON with latency). src/recount/cli.py with only `bench`
-(Stage 6 preview). tests/bench/ incl. an oracle client (perfect extraction = the verifier's upper bound,
-pinned). docs/benchmark.md is the contract (rows I/B/M/J/C/F), findings and §7 results; docs/eval.md
-has the Stage 5 addendum. CI: `recount bench --write-readme` replay + `git diff --exit-code`.
-Live run 2026-09-07 on gemini-3.1-flash-lite (extractor AND judge; the default pin stays
-gemini-3.6-flash, whose free tier is 5 RPM / 20 RPD): 197 calls. Results (table A): exact-match
-detection 83/100, false accepts 0/100, coverage 98/100; clean report 43 PASS / 0 FAIL / 8 UNV;
-fabricated_metric 17/20 detected-by-abstention + 2 false accepts (F-2); wrong_ranking 0/15 detected,
-15/15 abstained schema_gap (F-3); collateral false flags 85 on 48 variants, 0 on clean (F-4); judge
-120/120 "unfaithful" incl. the clean report, 80 false flags, 64% localized, 0/5 suppressed by injection.
-Changelog: (1) wire schema every key required-but-nullable (flash-lite recall 0.5965 → 0.8947,
-3.6-flash unchanged 0.9649, both re-recorded); (2) stated precision read off the span
-(rounding_drift 17/20 + 3 false accepts → 20/20 + 0), applied only after the "before" table.
-Next: Stage 6 — CLI exit codes, `recount init`, HTML report (4h box), promptfoo assertion, GitHub
-Action + demo PR. Rulings owed first: F-2 metric-echo check (extract/), F-3 config alias for "overall"
-(owner's config call), F-4 comparison-value semantics vs a prompt clarification.
+Current stage: Stage 6 part A complete — benchmark-driven fixes replayed (changelogs 3–6), STOPPED for the owner's
+read of the before/after tables before part B (packaging).
+Done (Stage 6 A, all keyless replays on the Stage 5 recordings, suite hash unchanged): (3) extractor rejects a
+comparison/growth value written as a level (`value_not_a_difference`): collateral false flags 85 → 0; (4) sweep is
+token-to-field (`sweep(artifact, coverage(claims))`, NumericToken.value): sweep-silent 1 → 0, +1.28 flagged tokens
+per artifact, all "17,280 orders"; (5) compiler echo gate M3 (span must name the bound metric; share may name its
+row-count denominator; evaluated last; the compiler now reads `span` for this one refusal): fabricated_metric false
+accepts 2 → 0, exact-match detection 83 → 74 (9 lost to two unaliased wordings), abstention 16% → 26%, clean
+43 → 38 PASS / 0 FAIL; fixture amendment F5 (`echo_gap` on nine labels, expected_verdict untouched so pools are
+frozen); (6) F-3 "overall" aliases shipped commented out in tests/fixtures/olist_metrics.yml, alias-on copy
+measured both ways: 14/15 on the Stage 5 verifier, 5/15 on the Stage 6 one (M3 refuses the spans with no wording).
+`recount bench --config`; CI replays and diffs latest.alias-on.json too. docs: benchmark.md §5–7 (tables C, D,
+progression), abstention.md (contract, M3, F5), eval.md Stage 6 addendum, learning-log ×3.
+Next: owner's ruling on the M3 cost (option: alias `delivery performance` / `days for delivery` under
+avg_delivery_days, returns 8 of the 9 detections; the two no-wording spans are unrecoverable by design), then
+Part B: `recount init --data`, exit codes 0/1/2 + --strict + docs, Jinja2 HTML report (4h box), promptfoo
+`recount-verify` assertion + example, Dockerized GitHub Action + demo PR blocked by a corrupted report; STOP at the
+blocked PR; end-of-stage quiz (a)(b)(c); STATUS; stop before Stage 7.
 Open questions: docs/recount_claude_code_guide.md C1 still says anthropic/ANTHROPIC_API_KEY; CLAUDE.md §0 (Gemini) wins.
 Known false-PASS path (documented, abstention P12): periods partly outside the data range compute over
 the rows present; V2 engine TODO queries min/max of time_column and abstains no_data. G7 (year rankings
 withheld as no_data) is the stopgap. COUNT DISTINCT metrics (c1) deferred; the sweep flags "27 states".
 Benchmark integrity: taxonomy frozen (test_corruption_taxonomy_is_frozen); every post-freeze change to
-verify/compile/extract is a numbered entry in docs/benchmark.md §6 with before/after numbers.
+verify/compile/extract is a numbered entry in docs/benchmark.md §6 with before/after numbers (six so far).

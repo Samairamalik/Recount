@@ -4,7 +4,8 @@
   "conventions": {
     "revenue_rounding": "SUM(revenue) rounded to 2dp before comparison. Raw DOUBLE sums vary by ~3.5e-07 with row order (measured), so an unrounded equality test is not well-defined.",
     "delivery_nulls": "avg_delivery_days uses SQL AVG, which excludes the 2 NULL delivery_days rows. Denominator is 43426 nationally, not 43428. Affected states: RS (n=2590) and SP (n=17070); affected quarters: Q2 and Q4.",
-    "tolerance": "A stated value PASSES if |stated - true| <= 0.5 * 10^-d, where d = decimal places in the stated number (i.e. the stated figure is a correct rounding of the truth)."
+    "tolerance": "A stated value PASSES if |stated - true| <= 0.5 * 10^-d, where d = decimal places in the stated number (i.e. the stated figure is a correct rounding of the truth).",
+    "echo_gap": "F5 (Stage 6, docs/abstention.md M3): `echo_gap: true` marks a label whose span contains no config name or alias for its metric (e.g. 'to hit 1,447,714.17', 'followed closely in third place'). expected_verdict stays the truth of the assertion, which the benchmark pools read; the goldens expect the compiler to abstain UNVERIFIABLE/schema_gap (metric_echo_failed) on these instead, because the metric was bound from context and the verifier refuses to trust that binding."
   },
   "corruption_manifest": {
     "clean_report": "spike/report_clean.md",
@@ -341,6 +342,7 @@
         "period": "2017-Q2"
       },
       "expected_verdict": "PASS",
+      "echo_gap": true,
       "true_value": 1447714.17,
       "true_value_sql": "SELECT ROUND(SUM(revenue), 2) FROM o WHERE QUARTER(order_date) = 2",
       "notes": "rounded to 2dp; absorbs the ~3.5e-07 float-ordering spread in SUM(revenue)"
@@ -359,6 +361,7 @@
         "direction": "better"
       },
       "expected_verdict": "PASS",
+      "echo_gap": true,
       "true_value": [
         [
           12.5534,
@@ -466,6 +469,7 @@
         "scope": "2017"
       },
       "expected_verdict": "PASS",
+      "echo_gap": true,
       "true_value": [
         [
           3,
@@ -534,6 +538,7 @@
         "period": "2017-Q4"
       },
       "expected_verdict": "PASS",
+      "echo_gap": true,
       "true_value": 2747559.5,
       "true_value_sql": "SELECT ROUND(SUM(revenue), 2) FROM o WHERE QUARTER(order_date) = 4",
       "notes": "rounded to 2dp; absorbs the ~3.5e-07 float-ordering spread in SUM(revenue)"
@@ -672,6 +677,7 @@
         "group_by": "state"
       },
       "expected_verdict": "PASS",
+      "echo_gap": true,
       "true_value": [
         [
           "SP",
@@ -719,6 +725,7 @@
         "group_by": "state"
       },
       "expected_verdict": "PASS",
+      "echo_gap": true,
       "true_value": [
         [
           "SP",
@@ -803,6 +810,7 @@
         "subject": "Rio de Janeiro"
       },
       "expected_verdict": "PASS",
+      "echo_gap": true,
       "true_value": 14.7373,
       "true_value_sql": "SELECT ROUND(AVG(delivery_days), 4) FROM o WHERE state = 'RJ'",
       "notes": ""
@@ -821,6 +829,7 @@
       },
       "clean_span": "Minas Gerais followed closely in third place",
       "expected_verdict": "FAIL",
+      "echo_gap": true,
       "true_value": [
         [
           "SP",
@@ -1052,6 +1061,7 @@
         "subject": "Parana"
       },
       "expected_verdict": "PASS",
+      "echo_gap": true,
       "true_value": 12.4019,
       "true_value_sql": "SELECT ROUND(AVG(delivery_days), 4) FROM o WHERE state = 'PR'",
       "notes": "stated to 1dp"

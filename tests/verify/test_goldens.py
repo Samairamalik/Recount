@@ -55,12 +55,22 @@ def test_golden_set_is_the_whole_fixture() -> None:
         "ambiguous": 3,  # c5 (D1), c7 (V5), c12 (V3)
         "unsupported_claim_type": 1,  # c11 (G10)
     }
+    # F5 (Stage 6): nine true assertions whose span names no config wording for the metric;
+    # the compiler abstains M3 on them and the benchmark pools still read expected_verdict.
+    assert sorted(r["claim"]["id"] for r in RECORDS if r.get("echo_gap")) == sorted(
+        ["c16", "c17", "c23", "c26", "c34", "c36", "c40", "c41", "c53"]
+    )
 
 
 @pytest.mark.parametrize("record", RECORDS, ids=[r["claim"]["id"] for r in RECORDS])
 def test_golden(record: dict[str, Any]) -> None:
     claim = _claim(record)
     v = verify_claim(DS, claim, CFG)
+    if record.get("echo_gap"):  # F5: true assertion, span names no metric wording (M3)
+        assert v.verdict == "UNVERIFIABLE" and v.abstain_reason == "schema_gap", v.detail
+        assert v.detail.startswith("metric_echo_failed"), v.detail
+        assert v.sql == "" and v.params == {} and v.row_counts == {}
+        return
     assert v.verdict == record["expected_verdict"], v.detail
     if v.verdict == "UNVERIFIABLE":
         assert v.abstain_reason == record["expected_reason"], v.detail
@@ -99,6 +109,12 @@ def test_every_corruption_fails_for_the_right_reason() -> None:
     assert len(manifest) == 6
     for c in manifest:
         v = _verdict(c["id"])
+        if c["id"] == "c41":
+            # F5 / M3: "Santa Catarina followed closely in third place" names no measure; the
+            # label bound it to orders from context and the compiler refuses that binding.
+            # The corruption is not detected: it is abstained, with the reason on record.
+            assert v.verdict == "UNVERIFIABLE" and v.detail.startswith("metric_echo_failed"), c
+            continue
         assert v.verdict == "FAIL", c
         assert v.policy == EXPECTED_POLICY[c["class"]], c
     # rounding_drift: 41.52 stated, 41.4654 true, bound 0.005 -> delta just beyond
@@ -116,9 +132,13 @@ def test_c11_overtaking_is_carried_by_displaced_not_by_the_span() -> None:
     only through the typed `displaced` field (abstention G10), never the span."""
     claim = _claim(BY_ID["c11"])
     assert isinstance(claim, Ranking) and claim.displaced == "unspecified"
-    assert verify_claim(DS, claim, CFG).verdict == "UNVERIFIABLE"
+    assert verify_claim(DS, claim, CFG).abstain_reason == "unsupported_claim_type"
     stripped = claim.model_copy(update={"displaced": None})
-    assert verify_claim(DS, stripped, CFG).verdict == "PASS"
+    # Stage 6: the span names no measure either, so the echo gate (M3, evaluated last)
+    # refuses the binding instead of PASSing the plain rank check.
+    assert verify_claim(DS, stripped, CFG).detail.startswith("metric_echo_failed")
+    echoed = stripped.model_copy(update={"span": "orders: " + stripped.span})
+    assert verify_claim(DS, echoed, CFG).verdict == "PASS"
 
 
 @pytest.mark.parametrize("cid", ["c15", "c36", "c33", "c23", "c1"])

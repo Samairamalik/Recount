@@ -12,7 +12,9 @@ a verdict. Claims are never invented and never patched.
 from __future__ import annotations
 
 import json
+import re
 from dataclasses import dataclass
+from decimal import Decimal, InvalidOperation
 from pathlib import Path
 from typing import Any, Literal, get_args
 
@@ -21,7 +23,7 @@ from pydantic import ValidationError
 from recount.claims import Claim, ClaimAdapter, Comparison, Growth, PointValue, Ranking, Share
 from recount.extract.client import ExtractError, ExtractorClient
 from recount.extract.prompt import PROMPT
-from recount.extract.sweep import NumericToken, sweep
+from recount.extract.sweep import NumericToken, coverage, sweep
 
 CLAIM_CLASSES: tuple[type[Claim], ...] = (PointValue, Growth, Comparison, Ranking, Share)
 _BY_TYPE: dict[str, type[Claim]] = {
@@ -100,6 +102,7 @@ RejectReason = Literal[
     "span_not_verbatim",
     "duplicate_span",
     "duplicate_id",
+    "value_not_a_difference",
 ]
 
 
@@ -159,6 +162,46 @@ def _validate(item: Any) -> Claim | Rejected:
         return Rejected(item, "invalid_claim", problems)
 
 
+_NUMBER = re.compile(r"\d[\d,]*(?:\.\d+)?")
+_BY_BEFORE = re.compile(r"\bby\s+(?:[a-z]+\s+)?$", re.IGNORECASE)
+_THAN_AFTER = re.compile(
+    r"(?:\s+[a-z]+){0,2}\s+(?:more|less|higher|lower|faster|slower|fewer|greater|smaller"
+    r"|longer|shorter|better|worse)\b",
+    re.IGNORECASE,
+)
+
+
+_PERCENT_AFTER = re.compile(r"\s*(?:%|percent\b|pct\b|percentage points?\b)", re.IGNORECASE)
+
+
+def _value_not_a_difference(claim: Comparison | Growth) -> str | None:
+    """F-4 (docs/benchmark.md changelog 3). `Comparison.value` is the stated *difference*
+    and `Growth.value` the stated *percentage*; the model also types a level as either
+    ("to stretch to 14.28 days" as a comparison with value 14.28, or as growth of 14.28%)
+    and the engine then fails 14.28 against a difference of 2.88 or a change of 25.2%.
+    Fail closed: keep a stated value only when the span writes it as a difference
+    ("by 2.3 days", "2.3 days lower than") or, for growth, as a percentage ("41.47%");
+    otherwise reject, and the number falls to the sweep."""
+    if claim.value is None:
+        return None
+    target = Decimal(str(claim.value))
+    for m in _NUMBER.finditer(claim.span):
+        try:
+            if Decimal(m[0].replace(",", "")) != target:
+                continue
+        except InvalidOperation:
+            continue
+        before, after = claim.span[: m.start()], claim.span[m.end() :]
+        if isinstance(claim, Growth):
+            if _PERCENT_AFTER.match(after):
+                return None
+            return f"growth value {m[0]} is not written as a percentage: {claim.span!r}"
+        if _BY_BEFORE.search(before) or _THAN_AFTER.match(after):
+            return None
+        return f"value {m[0]} is written as a level, not a difference: {claim.span!r}"
+    return f"value {claim.value} does not appear in {claim.span!r}"
+
+
 def extract_claims(
     artifact: str, client: ExtractorClient, *, raw_dump: Path | None = None
 ) -> Extraction:
@@ -178,6 +221,8 @@ def extract_claims(
             rejected.append(got)
         elif got.span not in artifact:
             rejected.append(Rejected(item, "span_not_verbatim", f"span {got.span!r}"))
+        elif isinstance(got, Comparison | Growth) and (why := _value_not_a_difference(got)):
+            rejected.append(Rejected(item, "value_not_a_difference", why))
         else:
             accepted.append(got)
 
@@ -196,7 +241,7 @@ def extract_claims(
     return Extraction(
         claims=tuple(accepted),
         rejected=tuple(rejected),
-        unextracted_numeric=sweep(artifact, tuple(c.span for c in accepted)),
+        unextracted_numeric=sweep(artifact, coverage(accepted)),
         raw=raw,
         model=client.model,
     )

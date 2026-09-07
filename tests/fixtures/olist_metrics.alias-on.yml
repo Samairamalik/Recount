@@ -1,4 +1,5 @@
-# Olist semantic config: spike/metrics.yml promoted into the Stage 1 SemanticConfig shape.
+# Olist semantic config, F-3 alias-on variant (docs/benchmark.md changelog 6). Differs from
+# olist_metrics.yml only in the two commented-out "overall" aliases being enabled.
 dataset: spike/data/orders.parquet
 time_column: order_date
 tolerance_rule: half_ulp
@@ -21,13 +22,8 @@ metrics:
     polarity: higher_is_better
   orders:
     agg: count
-    aliases: [orders, order volume, order count]
-    # F-3 opt-in (docs/benchmark.md, changelog 6). Rankings written as "second position
-    # overall" name no measure; the extractor writes the metric as "overall performance"
-    # and the verifier abstains schema_gap. Uncommenting these two lines declares that in
-    # YOUR reports "overall" means the order count. Recount never assumes it. The
-    # alias-on benchmark row is measured with tests/fixtures/olist_metrics.alias-on.yml.
-    # aliases: [orders, order volume, order count, overall, overall performance]
+    # F-3 opt-in ON: identical to olist_metrics.yml with the two "overall" aliases enabled.
+    aliases: [orders, order volume, order count, overall, overall performance]
     polarity: higher_is_better
   avg_order_value:
     agg: avg

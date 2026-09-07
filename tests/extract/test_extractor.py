@@ -193,6 +193,52 @@ def test_rejects_every_claim_sharing_an_id() -> None:
     assert ex.claims == () and _reasons(ex) == ["duplicate_id", "duplicate_id"]
 
 
+LEVELS = "Delivery improved, bringing the average delivery time down to 12.55 days in Q2."
+
+
+def _cmp(span: str, value: float | None, **over: Any) -> dict[str, Any]:
+    base = {
+        "id": "c1", "type": "comparison", "span": span, "metric": "average delivery time",
+        "value": value, "direction": "lower", "period": "2017-Q2", "baseline_period": "2017-Q1",
+        "confidence": "high",
+    }  # fmt: skip
+    return {**base, **over}
+
+
+def test_f4_rejects_a_comparison_whose_value_is_a_level() -> None:
+    """Stage 6, F-4: 'down to 12.55 days' states the level; Comparison.value is the difference."""
+    ex = extract_claims(LEVELS, Scripted([_cmp("down to 12.55 days", 12.55)]))
+    assert _reasons(ex) == ["value_not_a_difference"]
+    assert "level, not a difference" in ex.rejected[0].detail
+    assert [t.context for t in ex.unextracted_numeric] == ["12.55 days"]  # falls to the sweep
+
+
+@pytest.mark.parametrize(
+    ("artifact", "span", "value"),
+    [
+        ("Delivery time fell by 2.3 days in Q2.", "fell by 2.3 days", 2.3),
+        ("Delivery time fell by about 2.3 days in Q2.", "fell by about 2.3 days", 2.3),
+        ("Delivery took 2.3 days less than in Q1.", "2.3 days less than in Q1", 2.3),
+        ("Delivery was 2.3 days faster.", "2.3 days faster", 2.3),
+        (LEVELS, "Delivery improved", None),  # direction-only: nothing to check
+    ],
+)
+def test_f4_keeps_a_value_written_as_a_difference(artifact: str, span: str, value: Any) -> None:
+    ex = extract_claims(artifact, Scripted([_cmp(span, value)]))
+    assert ex.rejected == () and len(ex.claims) == 1
+
+
+def test_f4_rejects_a_growth_whose_value_is_not_a_percentage() -> None:
+    level = _cmp("down to 12.55 days", 12.55, type="growth", direction="decrease")
+    ex = extract_claims(LEVELS, Scripted([level]))
+    assert _reasons(ex) == ["value_not_a_difference"]
+    assert "not written as a percentage" in ex.rejected[0].detail
+    pct = _cmp("grew 12.4%", 12.4, type="growth", direction="increase")
+    assert extract_claims("Revenue grew 12.4% in Q2.", Scripted([pct])).rejected == ()
+    words = _cmp("grew 12.4 percent", 12.4, type="growth", direction="increase")
+    assert extract_claims("Revenue grew 12.4 percent.", Scripted([words])).rejected == ()
+
+
 def test_rejected_claims_leave_their_numbers_to_the_sweep() -> None:
     ex = extract_claims(ARTIFACT, Scripted([_pv(span="revenue was 1234.50")]))
     assert [t.text for t in ex.unextracted_numeric] == ["1,234.50", "20"]
