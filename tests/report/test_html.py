@@ -54,4 +54,6 @@ def test_render_is_deterministic_and_self_contained(tmp_path: Path) -> None:
     assert a == b
     assert "<script src=" not in a and "<link " not in a  # no external assets
     assert "parameters substituted for display" in a and "$start" in a
+    # the JSON payload is raw (the JS escapes on render), so SQL operators survive once
+    assert '\\"order_date\\" >= $start' in a and "&gt;=" not in a
     assert record["artifact_sha256"][:12] in a

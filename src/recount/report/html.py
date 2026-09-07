@@ -10,7 +10,6 @@ Deterministic: the same run record renders the same bytes.
 
 from __future__ import annotations
 
-import html
 import json
 import re
 from dataclasses import dataclass
@@ -167,7 +166,9 @@ def render_html(rec: RunRecord, record: dict[str, Any]) -> str:
         segments=segments(rec),
         claims=claims,
         fails=fails,
-        claims_json=html.escape(json.dumps({c["id"]: c for c in claims}), quote=False),
+        # raw JSON inside <script type="application/json">: only "</" must be neutralised,
+        # the drawer's JS escapes each field when it renders (no double escaping)
+        claims_json=json.dumps({c["id"]: c for c in claims}).replace("</", "<\\/"),
         unextracted=[t.context for t in rec.extraction.unextracted_numeric],
         rejected=[(r.reason, r.detail) for r in rec.extraction.rejected],
     )
