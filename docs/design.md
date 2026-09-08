@@ -250,8 +250,8 @@ Threat ids are cited from code comments and tests.
 | T5 | dataset exfiltration via the provider | only report text is sent; `--claims` runs fully offline; free-tier terms stated in `CLAUDE.md` | wall 1 test |
 | T6 | key leakage | env-only keys, `.env` git-ignored, keys never in PR CI (recordings instead) | `.github/workflows/verify-reports.yml` |
 | T7 | resource exhaustion | caps: 1 GiB / 100 M rows for the dataset, 1 MiB for the report, one call per artifact | `test_dataset_caps_are_a_one_line_exit_2`, `test_oversized_artifact_is_refused_before_any_extraction` |
-| T8 | dependency compromise | `uv` lockfile, seven runtime dependencies, `pip-audit` in CI | `ci.yml` |
-| T9 | a PR edits the gate it is subject to | deployment guidance, not code: required check + CODEOWNERS on `.github/` and `action.yml` | documented in [cli.md](cli.md) |
+| T8 | dependency compromise | `uv` lockfile, seven runtime dependencies, `pip-audit` enforcing in CI | `ci.yml` |
+| T9 | a PR edits the gate it is subject to | required check + code-owner review on `.github/`, `action.yml`, `Dockerfile` | `.github/CODEOWNERS`; branch protection on `main` |
 | T10 | self-serving benchmark | taxonomy frozen before tuning, coverage and abstention co-reported, changelog discipline, judge on identical artifacts | `test_corruption_taxonomy_is_frozen`, `test_suite_is_frozen_to_the_stage5_hash` |
 
 Injection resistance here is an architectural property that is tested, not security

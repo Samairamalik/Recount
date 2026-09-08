@@ -1,0 +1,7 @@
+# Threat T9 (docs/design.md): a PR must not be able to edit the gate it is subject to.
+# Changes to the workflows, the Action definition and its image need the owner's review;
+# pair this with "require review from Code Owners" and the required verify-reports check
+# in branch protection.
+/.github/    @Samairamalik
+/action.yml  @Samairamalik
+/Dockerfile  @Samairamalik

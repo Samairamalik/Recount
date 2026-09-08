@@ -89,9 +89,8 @@ bench/results/v0.1.0.json committed. The three private planning docs removed fro
 scrubbed (spec §, FR-, NFR- ids; threat ids T1–T10 now defined in docs/design.md). pip-audit clean; no key, .env or
 raw data tracked, history scanned.
 Next (after the go): `git tag v0.1.0` (+ `v0.1` moving tag for the Action `uses:` line), `gh repo edit
---visibility public`, capture the PR page frame into docs/demo.gif, then the mock interview. Deployment note
-unchanged: mark verify-reports required in branch protection + CODEOWNERS on .github/ and action.yml (T9), owner's
-call; ci.yml's pip-audit step is still advisory (`|| true`), owner's call to make it blocking.
+--visibility public`, capture the PR page frame into docs/demo.gif, then the mock interview. Pre-flip tightenings (owner's ruling, 2026-09-08): pip-audit is enforcing in ci.yml; .github/CODEOWNERS covers
+.github/, action.yml and Dockerfile (T9); verify-reports is already a required check on main.
 Known false-PASS path (documented, abstention P12): periods partly outside the data range compute over
 the rows present; V2 engine TODO queries min/max of time_column and abstains no_data. G7 (year rankings
 withheld as no_data) is the stopgap. COUNT DISTINCT metrics (c1) deferred; the sweep flags "27 states".

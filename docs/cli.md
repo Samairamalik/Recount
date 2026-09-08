@@ -129,8 +129,9 @@ Docker action (`action.yml`, `Dockerfile`): runs `recount verify` with `--json`,
 Recount's code, so a FAIL blocks the check. Live extraction needs `GEMINI_API_KEY` in the
 job's `env`; this repository's own workflow (`.github/workflows/verify-reports.yml`)
 replays the committed recordings instead, because keys never enter PR CI. To make the
-gate merge-blocking, mark the check required in branch protection (docs/design.md T9: also protect
-`.github/` and `action.yml` with CODEOWNERS so a PR cannot edit the gate it is subject to).
+gate merge-blocking, mark the check required in branch protection and require code-owner review; this
+repository's `.github/CODEOWNERS` covers `.github/`, `action.yml` and `Dockerfile` so a PR
+cannot edit the gate it is subject to (docs/design.md T9).
 
 ## `recount bench`
 
