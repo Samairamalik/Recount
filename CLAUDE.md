@@ -72,8 +72,7 @@ When your changes create orphans:
 The test: every changed line should trace directly to the user's request.
 
 ## STATUS (update at the end of every session)
-Current stage: Stage 7 complete pending the owner's explicit go for (a) the v0.1 tag and (b) making the repo
-public (STOP 6). Then STOP 7: tag, flip, and the 10-question mock interview.
+Current stage: v0.1.0 tagged (moving tag v0.1), repo PUBLIC (2026-09-08). Stage 7 closed with the mock interview.
 Done (Stage 7, 2026-09-08): tests/security/test_hostile_inputs.py (T3/T4/T7: 40 parametrised hostile-name cases
 through compile→verify, hostile column names as quoted identifiers, hostile cells as group keys, a `!!python` config
 tag refused as invalid YAML, dataset and artifact caps as one-line exit 2); tests/adversarial/test_injection.py (T1:
@@ -82,14 +81,14 @@ that claim, hostile wire keys are foreign fields; T2: Hypothesis instruction-in-
 tests/test_determinism.py (in-process, two-process byte-identical JSON/HTML/Markdown, Hypothesis row-order
 invariance). New cap: `pipeline.MAX_ARTIFACT_BYTES` = 1 MiB (`ArtifactError` → exit 2). docs/design.md (walls with
 test names, abstention, benchmark method, F-1→F-5, threat table T1–T10, honesty + prior art). README public-ready
-with docs/demo.gif (frames rendered from real runs: CLI on the corrupted report, `gh pr checks 1`, the HTML drawer;
-the GitHub PR page frame is added after the flip, when headless Chrome can reach it). LICENSE (Apache-2.0) added
+with docs/demo.gif (frames rendered from real runs: CLI on the corrupted report, the PR's Checks tab on
+GitHub with verify-reports ✗, the HTML drawer). LICENSE (Apache-2.0) added
 (it was referenced but missing). Version 0.1.0; benchmark replayed keylessly, only the version line moved;
 bench/results/v0.1.0.json committed. The three private planning docs removed from the tree and every reference
 scrubbed (spec §, FR-, NFR- ids; threat ids T1–T10 now defined in docs/design.md). pip-audit clean; no key, .env or
 raw data tracked, history scanned.
-Next (after the go): `git tag v0.1.0` (+ `v0.1` moving tag for the Action `uses:` line), `gh repo edit
---visibility public`, capture the PR page frame into docs/demo.gif, then the mock interview. Pre-flip tightenings (owner's ruling, 2026-09-08): pip-audit is enforcing in ci.yml; .github/CODEOWNERS covers
+Next: the post-v0.1 visibility write-up is the owner's; code-wise the V2 items are P12 (data-coverage abstention),
+COUNT DISTINCT metrics and rank-change verification. Pre-flip tightenings (owner's ruling, 2026-09-08): pip-audit is enforcing in ci.yml; .github/CODEOWNERS covers
 .github/, action.yml and Dockerfile (T9); verify-reports is already a required check on main.
 Known false-PASS path (documented, abstention P12): periods partly outside the data range compute over
 the rows present; V2 engine TODO queries min/max of time_column and abstains no_data. G7 (year rankings
