@@ -1,6 +1,6 @@
 """The run record: what `recount verify --json` writes and every other reporter reads.
 
-An audit record (spec §5): input hashes, tool and extractor-model versions, summary
+An audit record (docs/design.md): input hashes, tool and extractor-model versions, summary
 counts, every accepted claim next to its verdict, every rejected wire object, every
 unextracted numeric token, and per-stage timings. Nothing else is persisted: no dataset
 contents (a hash only), no API keys, no request payloads.
@@ -55,8 +55,9 @@ class RunRecord:
         }
 
     def exit_code(self) -> int:
-        """FR-009: 0 = no FAIL, 1 = any FAIL; --strict also fails on UNVERIFIABLE or on
-        an unextracted numeric token. 2 is reserved for system errors (raised, not here)."""
+        """Exit-code contract (docs/cli.md): 0 = no FAIL, 1 = any FAIL; --strict also fails on
+        UNVERIFIABLE or on an unextracted numeric token. 2 is reserved for system errors
+        (raised, not here)."""
         c = self.counts
         if c["FAIL"]:
             return 1

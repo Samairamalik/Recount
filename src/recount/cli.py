@@ -1,12 +1,12 @@
 """Recount CLI: `verify`, `init`, `bench`.
 
-Exit-code contract (FR-009, docs/cli.md):
+Exit-code contract (docs/cli.md):
   0  every checked claim PASSed (UNVERIFIABLE and unextracted numerics are reported, not
      fatal, unless --strict)
   1  at least one FAIL; with --strict also any UNVERIFIABLE or unextracted numeric
-  2  system error: dataset unreadable or not matching the config, config invalid (YAML
-     line cited), extraction invalid twice (raw output saved), a claim that crashed the
-     engine (partial results are still written)
+  2  system error: artifact empty or over the size cap, dataset unreadable or not matching
+     the config, config invalid (YAML line cited), extraction invalid twice (raw output
+     saved), a claim that crashed the engine (partial results are still written)
 """
 
 from __future__ import annotations
@@ -35,7 +35,7 @@ from recount.config import load_config
 from recount.config.template import metrics_template
 from recount.extract import ExtractError
 from recount.io import LoadError, describe_dataset
-from recount.pipeline import PartialFailure, verify_text
+from recount.pipeline import ArtifactError, PartialFailure, verify_text
 from recount.report import render_html, render_markdown, run_record, summary_line
 from recount.report import render_table as verdict_table
 from recount.report.json_out import RunRecord
@@ -56,7 +56,7 @@ def main() -> None:
 
 
 def _config_error(path: Path, e: Exception) -> str:
-    """One actionable sentence with a YAML line reference (§1.12)."""
+    """One actionable sentence with a YAML line reference (docs/cli.md, exit 2)."""
     if isinstance(e, yaml.YAMLError):
         mark = getattr(e, "problem_mark", None)
         at = f" at line {mark.line + 1}" if mark is not None else ""
@@ -148,7 +148,7 @@ def verify(
         bool, typer.Option(help="Also fail on UNVERIFIABLE or an unextracted numeric.")
     ] = False,
     claims: Annotated[
-        Path | None, typer.Option(help="Pre-extracted claims JSON: fully offline (FR-015).")
+        Path | None, typer.Option(help="Pre-extracted claims JSON: fully offline.")
     ] = None,
     recording: Annotated[
         Path | None, typer.Option(help="Replay a recorded extraction (keyless).")
@@ -176,6 +176,9 @@ def verify(
             text, data=data, config=config, strict=strict, claims=claims, recording=recording,
             recordings=recordings, model=model, raw_dump=raw_dump, artifact_path=str(artifact),
         )  # fmt: skip
+    except ArtifactError as e:
+        console.print(f"[red]{e}[/red] · {DOCS}#exit-codes")
+        raise typer.Exit(code=EXIT_ERROR) from e
     except (yaml.YAMLError, ValidationError) as e:
         console.print(f"[red]{_config_error(config, e)}[/red] · {DOCS}#config")
         raise typer.Exit(code=EXIT_ERROR) from e

@@ -27,6 +27,14 @@ from recount.io import Dataset, load_dataset
 from recount.report.json_out import RunRecord
 from recount.verify import Verdict, VerifyError, verify_claim
 
+# Threat T7 (docs/design.md): a report is not a book. Checked before any extraction call,
+# so an oversized artifact is a one-line exit 2, never a provider error or a runaway sweep.
+MAX_ARTIFACT_BYTES = 1 << 20  # 1 MiB of UTF-8, roughly 300 pages of prose
+
+
+class ArtifactError(Exception):
+    """The artifact cannot be verified as given: empty, or over the size cap."""
+
 
 @dataclass(frozen=True)
 class RunResult:
@@ -81,7 +89,7 @@ def pick_client(
     recordings: Path | None = None,
     model: str | None = None,
 ) -> ExtractorClient:
-    """Offline first: a claims file (FR-015), a recording, a recordings directory keyed
+    """Offline first: a claims file, a recording, a recordings directory keyed
     like the benchmark's (sha256 of the artifact, 16 hex chars); else the live client,
     imported only here so a keyless run never touches the provider module."""
     if claims is not None:
@@ -112,9 +120,14 @@ def verify_text(
     raw_dump: Path | None = None,
     artifact_path: str = "<text>",
 ) -> RunRecord:
-    """Load, extract, verify; return the run record. Raises LoadError / ValidationError /
-    ExtractError / FileNotFoundError for system errors before any verdict exists, and
-    PartialFailure (carrying the record) when a claim crashed the engine."""
+    """Load, extract, verify; return the run record. Raises ArtifactError / LoadError /
+    ValidationError / ExtractError / FileNotFoundError for system errors before any verdict
+    exists, and PartialFailure (carrying the record) when a claim crashed the engine."""
+    size = len(artifact.encode())
+    if size > MAX_ARTIFACT_BYTES:
+        raise ArtifactError(f"artifact is {size} bytes; cap is {MAX_ARTIFACT_BYTES}")
+    if not artifact.strip():
+        raise ArtifactError("artifact is empty")
     timings: dict[str, float] = {}
     t0 = time.perf_counter()
     cfg = load_config(config)
@@ -133,7 +146,7 @@ def verify_text(
     for claim in extraction.claims:
         try:
             verdicts.append(verify_claim(ds, claim, cfg))
-        except (VerifyError, Exception) as e:  # partial results are always emitted (§1.12)
+        except (VerifyError, Exception) as e:  # partial results are always emitted (docs/cli.md)
             errors.append(f"{claim.id}: {type(e).__name__}: {e}")
             verdicts.append(_error_verdict(claim.id, e))
     timings["verify"] = round(time.perf_counter() - t2, 4)

@@ -1,4 +1,4 @@
-# Recount GitHub Action image (spec §2.5: the Action's container is the only Docker).
+# Recount GitHub Action image (the Action's container is the only Docker in the project).
 FROM python:3.12-slim
 WORKDIR /recount
 COPY pyproject.toml README.md ./

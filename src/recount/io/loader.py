@@ -17,7 +17,7 @@ from recount.config import SemanticConfig
 
 TABLE = "data"
 MAX_BYTES = 1 << 30  # 1 GiB
-MAX_ROWS = 100_000_000  # DuckDB single-node comfort zone (spec §2.5)
+MAX_ROWS = 100_000_000  # DuckDB single-node comfort zone (docs/design.md, T7)
 
 _TIME_TYPES = ("DATE", "TIMESTAMP")
 _NUMERIC_TYPES = (

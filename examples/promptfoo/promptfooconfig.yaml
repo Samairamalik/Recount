@@ -1,4 +1,4 @@
-# promptfoo worked example: verify a generated report with Recount (FR-012).
+# promptfoo worked example: verify a generated report with Recount.
 #
 #   cd examples/promptfoo && npx promptfoo@latest eval
 #

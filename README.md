@@ -2,13 +2,21 @@
 
 **Deterministic verification of numeric claims in LLM-generated reports.**
 
-LLMs writing about data confidently state wrong numbers. Recount takes a report,
-the source dataset (CSV/Parquet), and a small metric config; extracts every
-checkable claim; recomputes each one with plain SQL (DuckDB) — zero AI in the
-verification step — and returns PASS / FAIL / UNVERIFIABLE per claim with the
-executed query and row counts as proof.
+[![ci](https://github.com/Samairamalik/Recount/actions/workflows/ci.yml/badge.svg)](https://github.com/Samairamalik/Recount/actions/workflows/ci.yml)
+[![license](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 
-> Status: Stage 6 (CLI, HTML report, promptfoo assertion, GitHub Action; benchmark numbers below and in `docs/benchmark.md` §6–7).
+LLMs writing about data state wrong numbers with confidence. Recount takes a report, the
+source dataset (CSV or Parquet) and a small metric config; an LLM extracts every checkable
+claim; deterministic code recomputes each one with a fixed SQL template in DuckDB and returns
+PASS / FAIL / UNVERIFIABLE per claim, with the executed query and row counts as evidence. No
+model ever decides whether a number is right.
+
+![A PR with one corrupted number is blocked: the CLI fails claim c29, the GitHub check goes red, and the HTML report opens the failing span with its SQL](docs/demo.gif)
+
+*Above: one digit pair transposed in the example report (`2,428,002.62` → `4,228,002.62`).
+`recount verify` exits 1, the Action fails the pull request
+([#1](https://github.com/Samairamalik/Recount/pull/1)), and the HTML report opens the failing
+claim with the computed value, the tolerance and the SQL that produced it.*
 
 ## Quickstart (no API key needed for the bundled example)
 
@@ -23,26 +31,50 @@ You get a verdict table, `40 PASS · 0 FAIL · 11 UNVERIFIABLE · 5 unextracted 
 exit code 0, and `out.html`: the report as written with every claim coloured, click for the
 SQL. `--recordings` replays the extractor's recorded response for this exact text; set
 `GEMINI_API_KEY` and drop it to extract live. For your own data: `recount init --data
-your.parquet` writes a commented `metrics.yml` to edit. Exit codes 0 / 1 / 2 and `--strict`,
-the promptfoo assertion and the GitHub Action: [docs/cli.md](docs/cli.md).
+your.parquet` writes a commented `metrics.yml` to edit. Exit codes 0 / 1 / 2, `--strict`,
+`--claims` for a fully offline run, the promptfoo assertion and the GitHub Action:
+[docs/cli.md](docs/cli.md).
 
-## What Recount does NOT do (honesty section — keep this current)
-- It does not make the generator hallucinate less; it makes hallucinated numbers detectable.
-- The extraction step is an LLM; only the *verification* step is deterministic.
-- It verifies against the config's definition of a metric; a wrong config yields confidently wrong verdicts.
-- Dataset contents never enter a prompt on the verification path. The one exception is the
-  benchmark's LLM-as-judge baseline, which is handed a deterministic aggregate summary of the
-  public example data so the head-to-head is fair; its output never touches a verdict.
+```yaml
+# .github/workflows/verify-reports.yml
+- uses: Samairamalik/Recount@v0.1
+  with:
+    report: reports/q3.md
+    data: data/orders.parquet
+    config: metrics.yml
+```
 
-## Prior art (credited, not competed with)
-VeriFin (arXiv 2608.10213) · Deterministic Integrity Gates (arXiv 2606.09500) ·
-Thucy (arXiv 2512.03278) · Evergreen (arXiv 2604.26180) · Proof-Carrying Numbers (arXiv 2509.06902) ·
-FinGround (arXiv 2604.23588). Each solves a constrained slice; Recount is the general,
-dataset-agnostic, developer-tooling assembly.
+## How it works
+
+1. **Extract.** One structured-output call per report (Gemini, temperature 0, JSON schema
+   derived from the claim models). The model sees the report only: never the dataset, never
+   the config.
+2. **Reject, never repair.** Every returned object is re-validated; a span that is not
+   verbatim in the report, a duplicate, a foreign field, a value written as a level instead
+   of a difference is dropped and recorded. A numeric sweep lists every number no accepted
+   claim covers.
+3. **Compile.** Each claim is bound to the config's metric, entity and period definitions,
+   or abstains with a reason code (`schema_gap`, `ambiguous`, `unsupported_claim_type`,
+   `no_data`). The compiler never guesses: [docs/abstention.md](docs/abstention.md).
+4. **Execute and compare.** Five fixed, parameterized SQL templates; direction is checked
+   before magnitude; tolerance is half a unit of the last decimal *as written*.
+5. **Report.** A JSON run record with input hashes, a terminal or Markdown table, a
+   single-file HTML report, and an exit code a CI gate can act on.
+
+Three architectural walls hold this together, each with a build-failing test: dataset
+contents never enter a prompt, report text never reaches a verdict except through a
+schema-validated claim, and SQL exists only as fixed templates. The design, the threat
+model and the findings that shaped the tool: [docs/design.md](docs/design.md).
 
 ## Benchmark
+
+Seven corruption classes frozen before any verifier existed, five seeds, 120 corrupted
+variants of the example report plus the clean one, scored by Recount and by an LLM-as-judge
+baseline (same model, handed a deterministic summary of the data as an answer key). CI
+replays the whole suite from committed recordings and fails if this table drifts.
+
 <!-- BENCH:START -->
-Recount 0.0.1 · 121 artifacts (96 distinct) · seeds 1, 2, 3, 4, 5 · extractor and judge: `gemini-3.1-flash-lite` · suite `fcd63c6c9739` · methodology and per-class analysis in [docs/benchmark.md](docs/benchmark.md).
+Recount 0.1.0 · 121 artifacts (96 distinct) · seeds 1, 2, 3, 4, 5 · extractor and judge: `gemini-3.1-flash-lite` · suite `fcd63c6c9739` · methodology and per-class analysis in [docs/benchmark.md](docs/benchmark.md).
 
 | class | n | claims | detection | by abstention | false accept | coverage | abstention | sweep flagged | collateral flags | judge detection | judge false accept | judge localized |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
@@ -65,7 +97,70 @@ instruction_in_data: Recount verdicts identical to the sibling variant in 5/5 (i
 | judge s | 2.164 s | 3.699 s | 101 | recordings of the live run |
 | verification ms per claim | 1.1863 ms | 2.6501 ms | 6228 | live run |
 <!-- BENCH:END -->
-F-3 opt-in, measured separately with `tests/fixtures/olist_metrics.alias-on.yml` (the two `overall` aliases uncommented; `bench/results/latest.alias-on.json`): wrong_ranking detection 5/15, 10/15 abstained `metric_echo_failed`, 0 false accepts; everything else identical. The default stays alias-off. Both rows and the reasoning are in [docs/benchmark.md](docs/benchmark.md) §7.
+
+**Head-to-head.** The judge calls all 120 corrupted reports unfaithful, and also the clean
+one, and raises 80 problems on spans that are correct; its artifact-level verdict carries no
+information on this suite. Recount detects 79 % of the exact-match corruptions with 0 false
+accepts, 0 false flags on the clean report, and an executed query behind every verdict. The
+fabricated-metric class is caught by abstention (19/20), which is the correct outcome for a
+number the data cannot support. Method, per-class analysis and the seven-entry changelog of
+every post-freeze change: [docs/benchmark.md](docs/benchmark.md).
+
+F-3 opt-in, measured separately with `tests/fixtures/olist_metrics.alias-on.yml` (the two
+`overall` aliases uncommented; `bench/results/latest.alias-on.json`): wrong_ranking detection
+5/15, 10/15 abstained `metric_echo_failed`, 0 false accepts; everything else identical. The
+default stays alias-off. Both rows and the reasoning are in
+[docs/benchmark.md](docs/benchmark.md) §7.
+
+## What Recount does NOT do
+
+- It does not make the generator hallucinate less; it makes hallucinated numbers detectable
+  and blocking, after the fact.
+- It is not "zero AI". The extraction step is an LLM; only the *verification* step is
+  deterministic. Extraction misses and wrong bindings are the largest residual risk, and
+  they are measured (recall 0.96 / 0.89 on the two models, [docs/eval.md](docs/eval.md);
+  the `swapped_entity` and `fabricated_metric` classes above).
+- It verifies against the config's definition of a metric; a wrong config yields confidently
+  wrong verdicts.
+- Rank changes ("overtook"), COUNT DISTINCT metrics and periods partly outside the data are
+  not handled; the last is a documented false-PASS path
+  ([docs/abstention.md](docs/abstention.md) §5).
+- The benchmark is one dataset, one report style, seven classes, five seeds. Reproducible,
+  not general.
+- Dataset contents never enter a prompt on the verification path. The one exception is the
+  benchmark's LLM-as-judge baseline, which is handed a deterministic aggregate summary of the
+  public example data so the head-to-head is fair; its output never touches a verdict.
+
+## Prior art (credited, not competed with)
+
+VeriFin ([arXiv 2608.10213](https://arxiv.org/abs/2608.10213)) · Deterministic Integrity
+Gates ([arXiv 2606.09500](https://arxiv.org/abs/2606.09500)) · Thucy
+([arXiv 2512.03278](https://arxiv.org/abs/2512.03278)) · Evergreen
+([arXiv 2604.26180](https://arxiv.org/abs/2604.26180)) · Proof-Carrying Numbers
+([arXiv 2509.06902](https://arxiv.org/abs/2509.06902)) · FinGround
+([arXiv 2604.23588](https://arxiv.org/abs/2604.23588)). Each solves a constrained slice
+(XBRL facts, locked clinical tables, relational databases with an LLM-mediated verdict,
+text corpora, pre-tagged tokens, SEC filings). To my knowledge, Recount's contribution is the
+assembly: free-text extraction → deterministic re-derivation over an arbitrary tabular
+dataset → PASS / FAIL / UNVERIFIABLE with the SQL, shipped as a CLI, a CI gate and a
+promptfoo assertion, with a reproducible seeded-corruption benchmark that reports coverage
+and abstention next to detection. What each system does and does not do:
+[docs/design.md §8](docs/design.md#8-prior-art).
+
+## Documentation
+
+- [docs/design.md](docs/design.md): the three walls and their tests, abstention philosophy,
+  benchmark method, findings F-1 to F-5, threat model, honesty section.
+- [docs/abstention.md](docs/abstention.md): the compiler's decision table, row by row.
+- [docs/benchmark.md](docs/benchmark.md): suite construction, metrics, judge baseline,
+  results, changelog.
+- [docs/eval.md](docs/eval.md): extraction precision and recall on 57 hand-labelled claims.
+- [docs/cli.md](docs/cli.md): commands, exit codes, promptfoo, GitHub Action.
+- [docs/learning-log.md](docs/learning-log.md): one dated line per design decision.
 
 ## License
-Apache-2.0 (code). Example data: see `examples/olist/ATTRIBUTION.md`.
+
+Apache-2.0 for the code ([LICENSE](LICENSE)). The example data is a small sample of the
+Olist Brazilian E-Commerce dataset, CC BY-NC-SA 4.0; see
+[examples/olist/ATTRIBUTION.md](examples/olist/ATTRIBUTION.md). The non-commercial clause
+applies to that sample, not to the tool.

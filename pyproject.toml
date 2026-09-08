@@ -1,6 +1,6 @@
 [project]
 name = "recount"
-version = "0.0.1"
+version = "0.1.0"
 description = "Deterministic verification of numeric claims in LLM-generated reports"
 readme = "README.md"
 requires-python = ">=3.12"

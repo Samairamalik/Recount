@@ -1,5 +1,5 @@
 # The Recount gate on the example report: any report change in a PR is verified against the
-# example dataset and a FAIL blocks the check. Keys never enter PR CI (spec §2.3), so extraction
+# example dataset and a FAIL blocks the check. Keys never enter PR CI (docs/design.md, T6), so extraction
 # replays the committed recordings (the live model's responses for these exact texts); a
 # report whose text has no recording fails with exit 2 rather than passing silently.
 name: verify-reports

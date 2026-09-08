@@ -109,7 +109,7 @@ class MockClient:
 
 
 class ClaimsFileClient:
-    """The fully offline path (FR-015): `--claims claims.json` is "the response". The file
+    """The fully offline path: `--claims claims.json` is "the response". The file
     goes through the same validation and post-checks as a live response, so a hand-written
     claim whose span is not verbatim in the artifact is rejected like any other."""
 

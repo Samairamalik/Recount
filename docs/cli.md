@@ -1,4 +1,4 @@
-# Recount CLI (Stage 6)
+# Recount CLI
 
 Three commands: `recount init`, `recount verify`, `recount bench`. Everything is a YAML
 file plus flags; nothing is persisted between runs.
@@ -17,7 +17,7 @@ code 0, and `out.html` with every span coloured. `--recordings` replays the live
 recorded extraction for exactly this text (the benchmark's recordings); drop it and set
 `GEMINI_API_KEY` to extract live.
 
-## Exit codes (FR-009)
+## Exit codes
 
 | code | meaning |
 |---|---|
@@ -27,6 +27,7 @@ recorded extraction for exactly this text (the benchmark's recordings); drop it 
 
 Exit 2 cases, each one sentence plus a link here:
 
+- **artifact** empty, or over the 1 MiB size cap.
 - **dataset** unreadable, wrong format (`.csv` / `.parquet` only), over the size or row cap,
   or not matching the config (a column the config names is missing or mistyped).
 - **config** not valid YAML (line cited) or not a valid `SemanticConfig` (field path and the
@@ -48,7 +49,7 @@ recount verify REPORT --data DATA --config CONFIG
     [--claims claims.json | --recording rec.json | --recordings DIR] [--model NAME]
 ```
 
-- `--json` writes the run record (spec §5): version, extractor model, artifact / dataset /
+- `--json` writes the run record (docs/design.md, the audit record): version, extractor model, artifact / dataset /
   config SHA-256, counts, exit code, per-stage timings, every claim next to its verdict
   (executed SQL, bound parameters, row counts), rejected wire objects, unextracted tokens.
 - `--html` writes the annotated report: the artifact as written, spans coloured by verdict
@@ -79,7 +80,7 @@ is a complete one, including two commented-out opt-in aliases and why they are o
 ### dataset
 
 `.parquet` or `.csv`, one row per event, a DATE / TIMESTAMP column for `time_column`,
-numeric columns for sum / avg metrics. Caps: 1 GiB, 100M rows. The file path goes through
+numeric columns for sum / avg metrics. Caps: 1 GiB, 100M rows (and 1 MiB for the report). The file path goes through
 the DuckDB API, never into SQL text; dataset contents never enter any prompt.
 
 ## `recount init`
@@ -128,7 +129,7 @@ Docker action (`action.yml`, `Dockerfile`): runs `recount verify` with `--json`,
 Recount's code, so a FAIL blocks the check. Live extraction needs `GEMINI_API_KEY` in the
 job's `env`; this repository's own workflow (`.github/workflows/verify-reports.yml`)
 replays the committed recordings instead, because keys never enter PR CI. To make the
-gate merge-blocking, mark the check required in branch protection (spec T9: also protect
+gate merge-blocking, mark the check required in branch protection (docs/design.md T9: also protect
 `.github/` and `action.yml` with CODEOWNERS so a PR cannot edit the gate it is subject to).
 
 ## `recount bench`

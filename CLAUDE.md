@@ -72,29 +72,28 @@ When your changes create orphans:
 The test: every changed line should trace directly to the user's request.
 
 ## STATUS (update at the end of every session)
-Current stage: Stage 6 complete pending the owner's look at the blocked demo PR (STOP 2) — parts A and B committed and
-pushed; stop before Stage 7.
-Done (Stage 6 A, all keyless replays on the Stage 5 recordings, suite hash unchanged): changelogs 3–7 in
-docs/benchmark.md §6: (3) extractor rejects a comparison/growth value written as a level (collateral false flags
-85 → 0); (4) token-to-field sweep (sweep-silent 1 → 0); (5) compiler echo gate M3, fixture amendment F5 (echo_gap;
-pools untouched): fabricated_metric false accepts 2 → 0; (6) F-3 "overall" aliases commented-out opt-in, alias-on
-replayed both ways (14/15 on Stage 5, 5/15 on Stage 6); (7) `days for delivery` default alias, `delivery
-performance` opt-in, suite generated from frozen bench/suite_config.yml (hash pinned). Final default table C:
-exact-match detection 79/100, false accepts 0, collateral 0, abstention 21.9%, clean 40 PASS / 0 FAIL / 11 UNV.
-Done (Stage 6 B): `recount verify` (--json/--html/--md/--strict/--annotations; --claims fully offline,
---recording/--recordings keyless replay), exit codes 0/1/2 with one-sentence exit-2 messages citing YAML lines
-(docs/cli.md); `recount init --data` commented template (config/template.py); report/ (run record with hashes and
-timings, Rich + Markdown tables, Jinja2 static HTML with evidence drawer + YAML stubs); pipeline.verify_text with
-partial results on a crashed claim; adapters/promptfoo.get_assert + examples/promptfoo worked example; docker
-action.yml + Dockerfile + .github/workflows/verify-reports.yml (replays committed recordings: keys never in PR CI);
-examples/olist/{report.md,metrics.yml}; README quickstart reproduced from a clean-venv wheel install. Demo PR #1
-(demo/corrupted-report: Sao Paulo revenue 2,428,002.62 → 4,228,002.62, variant s1-wrong_figure-c31).
-Next: Stage 7 — Hypothesis suites (no-false-accept, round-trip truth, instruction-in-data invariance, byte-identical
-determinism), hostile-input tests, docs/design.md, demo GIF, v0.1 tag; gate G5 = PRD §1.16. Deployment note: mark
-verify-reports required in branch protection + CODEOWNERS on .github/ and action.yml (T9), owner's call.
-Open questions: docs/recount_claude_code_guide.md C1 still says anthropic/ANTHROPIC_API_KEY; CLAUDE.md §0 (Gemini) wins.
+Current stage: Stage 7 complete pending the owner's explicit go for (a) the v0.1 tag and (b) making the repo
+public (STOP 6). Then STOP 7: tag, flip, and the 10-question mock interview.
+Done (Stage 7, 2026-09-08): tests/security/test_hostile_inputs.py (T3/T4/T7: 40 parametrised hostile-name cases
+through compile→verify, hostile column names as quoted identifiers, hostile cells as group keys, a `!!python` config
+tag refused as invalid YAML, dataset and artifact caps as one-line exit 2); tests/adversarial/test_injection.py (T1:
+10 phrasings × 3 positions with extraction held fixed → verdicts identical, a phrasing inside a span rejects only
+that claim, hostile wire keys are foreign fields; T2: Hypothesis instruction-in-a-cell invariance);
+tests/test_determinism.py (in-process, two-process byte-identical JSON/HTML/Markdown, Hypothesis row-order
+invariance). New cap: `pipeline.MAX_ARTIFACT_BYTES` = 1 MiB (`ArtifactError` → exit 2). docs/design.md (walls with
+test names, abstention, benchmark method, F-1→F-5, threat table T1–T10, honesty + prior art). README public-ready
+with docs/demo.gif (frames rendered from real runs: CLI on the corrupted report, `gh pr checks 1`, the HTML drawer;
+the GitHub PR page frame is added after the flip, when headless Chrome can reach it). LICENSE (Apache-2.0) added
+(it was referenced but missing). Version 0.1.0; benchmark replayed keylessly, only the version line moved;
+bench/results/v0.1.0.json committed. The three private planning docs removed from the tree and every reference
+scrubbed (spec §, FR-, NFR- ids; threat ids T1–T10 now defined in docs/design.md). pip-audit clean; no key, .env or
+raw data tracked, history scanned.
+Next (after the go): `git tag v0.1.0` (+ `v0.1` moving tag for the Action `uses:` line), `gh repo edit
+--visibility public`, capture the PR page frame into docs/demo.gif, then the mock interview. Deployment note
+unchanged: mark verify-reports required in branch protection + CODEOWNERS on .github/ and action.yml (T9), owner's
+call; ci.yml's pip-audit step is still advisory (`|| true`), owner's call to make it blocking.
 Known false-PASS path (documented, abstention P12): periods partly outside the data range compute over
 the rows present; V2 engine TODO queries min/max of time_column and abstains no_data. G7 (year rankings
 withheld as no_data) is the stopgap. COUNT DISTINCT metrics (c1) deferred; the sweep flags "27 states".
 Benchmark integrity: taxonomy frozen (test_corruption_taxonomy_is_frozen); every post-freeze change to
-verify/compile/extract is a numbered entry in docs/benchmark.md §6 with before/after numbers (six so far).
+verify/compile/extract is a numbered entry in docs/benchmark.md §6 with before/after numbers (seven so far).

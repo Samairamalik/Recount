@@ -1,4 +1,4 @@
-"""`recount verify`: the exit-code contract (FR-009), the offline paths (--claims,
+"""`recount verify`: the exit-code contract (docs/cli.md), the offline paths (--claims,
 --recording, --recordings), every exit-2 sentence, and the three output files."""
 
 from __future__ import annotations

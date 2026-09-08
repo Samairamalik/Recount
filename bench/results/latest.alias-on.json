@@ -1,5 +1,5 @@
 {
-  "version": "0.0.1",
+  "version": "0.1.0",
   "model": "gemini-3.1-flash-lite",
   "seeds": [
     1,

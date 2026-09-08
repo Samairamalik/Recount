@@ -18,7 +18,7 @@ inputs:
     description: "Also fail on UNVERIFIABLE claims or unextracted numerics (\"true\"/\"false\")."
     default: "false"
   claims:
-    description: "Pre-extracted claims JSON: fully offline, no key (FR-015)."
+    description: "Pre-extracted claims JSON: fully offline, no key."
     default: ""
   recordings:
     description: "Directory of recorded extractions keyed by artifact sha256[:16]: keyless replay."

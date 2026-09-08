@@ -1,4 +1,4 @@
-"""promptfoo `recount-verify` assertion (FR-012).
+"""promptfoo `recount-verify` assertion.
 
     assert:
       - type: python
