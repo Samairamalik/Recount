@@ -1,13 +1,13 @@
 """Verification engine: one fixed parameterized SQL template per plan kind.
 
 Rendering rule (the closed world): each template is one constant below with three
-kinds of slot.
+kinds of slot (two constants for rankings: with and without a min_rows universe).
   * identifier slots ({t}, {col}, {dim}, {key}): double-quoted column names taken
     from the plan, which the loader validated against the dataset schema and which
     execute() re-checks against Dataset.columns before rendering;
   * keyword slots ({value}, {order}, {entity}): fixed fragments selected by Literal
     fields (SUM/COUNT/AVG, ASC/DESC, the optional entity clause, the ROUND wrapper);
-  * bound parameters ($start, $end, $entity, $grain, $digits): every data-shaped
+  * bound parameters ($start, $end, $entity, $grain, $digits, $min_rows): every data-shaped
     value. Entity values and dates never touch SQL text.
 Nothing derived from claim text or dataset contents is ever rendered into SQL.
 """
@@ -72,6 +72,25 @@ FROM (SELECT CAST({key} AS VARCHAR) AS key, {value} AS value,
       GROUP BY 1)
 WHERE key IS NOT NULL
 ORDER BY rank, key"""
+
+# The same ranking with a minimum-support universe (metrics.<m>.min_rows, F-4): groups
+# below the threshold are still returned, with their row count and a NULL rank, so a
+# subject that fell out of the universe can be told apart from one the data never had
+# (policies.check_ranking, abstention N5). A second constant rather than a slot in
+# RANK_SQL, so that a config without min_rows executes byte-identical SQL to before.
+RANK_MIN_ROWS_SQL = """\
+SELECT key, value, n_rows, n_used,
+       CASE WHEN supported
+            THEN RANK() OVER (PARTITION BY supported ORDER BY value {order} NULLS LAST)
+       END AS rank
+FROM (SELECT CAST({key} AS VARCHAR) AS key, {value} AS value,
+             COUNT(*) AS n_rows, COUNT({used}) AS n_used,
+             COUNT(*) >= $min_rows AS supported
+      FROM data
+      WHERE {t} >= $start AND {t} < $end
+      GROUP BY 1)
+WHERE key IS NOT NULL
+ORDER BY rank NULLS LAST, key"""
 
 SHARE_SQL = """\
 SELECT 100.0 * {part} / NULLIF({whole}, 0) AS share_pct,
@@ -216,22 +235,23 @@ def _rank(ds: Dataset, plan: RankPlan) -> Computed:
     else:
         key = _ident(plan.group_by.column)
     value, used = _measure_fragments(plan.measure, params)
-    sql = RANK_SQL.format(
-        key=key,
-        value=value,
-        used=used,
-        t=t,
-        order="DESC" if plan.polarity == "higher_is_better" else "ASC",
+    template = RANK_SQL
+    if plan.min_rows is not None:
+        template = RANK_MIN_ROWS_SQL
+        params["min_rows"] = plan.min_rows
+    sql = template.format(
+        key=key, value=value, used=used, t=t, order="DESC" if plan.order == "desc" else "ASC"
     )
     raw = ds.con.execute(sql, params).fetchall()
-    rows = tuple(RankRow(key=str(k), value=_float(v), rank=int(r)) for k, v, _, _, r in raw)
-    n_rows = sum(int(n) for _, _, n, _, _ in raw)
-    return Computed(
-        sql=sql,
-        params=params,
-        row_counts={"n_rows": n_rows, "n_groups": len(rows)},
-        rows=rows,
+    rows = tuple(
+        RankRow(key=str(k), value=_float(v), rank=None if r is None else int(r), n_rows=int(n))
+        for k, v, n, _, r in raw
     )
+    n_rows = sum(int(n) for _, _, n, _, _ in raw)
+    counts = {"n_rows": n_rows, "n_groups": sum(1 for r in rows if r.rank is not None)}
+    if plan.min_rows is not None:  # the universe is smaller than the data: say by how much
+        counts["n_groups_excluded"] = sum(1 for r in rows if r.rank is None)
+    return Computed(sql=sql, params=params, row_counts=counts, rows=rows)
 
 
 def _share(ds: Dataset, plan: SharePlan) -> Computed:
@@ -299,7 +319,7 @@ def _apply_policy(claim: Claim, plan: ComputePlan, computed: Computed) -> Policy
         )
     if isinstance(claim, Ranking):
         assert isinstance(plan, RankPlan)
-        return policies.check_ranking(claim, plan.subject_key, computed.rows)
+        return policies.check_ranking(claim, plan.subject_key, computed.rows, plan.min_rows)
     return policies.check_share(claim, computed.values["share_pct"])
 
 

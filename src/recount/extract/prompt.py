@@ -3,9 +3,10 @@
 The examples come from an invented widget-sales report, never from the Olist text,
 so the extraction eval is not contaminated by its own answers. The prompt carries the
 schema's contracts in words: unsigned magnitudes with the sign in `direction`, the
-period grammar of docs/abstention.md §P, `scope` for time-grain rankings, `displaced`
-for overtaking, and "extract vaguely with confidence low, never drop". The dataset
-and the config never appear here (CLAUDE.md §0).
+period grammar of docs/abstention.md §P, `rank_from` for which end a rank counts from
+(Stage 8, F-3), `scope` for a stated ranking universe, `displaced` for overtaking, and
+"extract vaguely with confidence low, never drop". The dataset and the config never
+appear here (CLAUDE.md §0).
 """
 
 PROMPT = """\
@@ -55,15 +56,26 @@ comparison  A directional statement without a percentage: "improved", "worsened"
 ranking  A position among entities or among periods: "led all states", "set the
   benchmark", "second position", "third place", "took the lead", "peak of the year",
   "a year-low". rank = the position; any superlative (best, fastest, largest, peak,
-  top) is rank 1. group_by = what is being ranked: an entity dimension in the
-  report's words ("state", "region", "product") or a time grain ("quarter",
-  "month", "year"). subject = the entity holding the rank; for a time-grain ranking
-  put the ranked period in period and leave subject null. scope = the universe of a
-  time-grain ranking, written as a period ("of the year" -> that year; "of the first
-  half" -> "2019-01 to 2019-06"); null for entity rankings. displaced is non-null
-  only when the sentence asserts an overtaking, a change of rank over time:
-  "overtook Rio" -> "Rio"; "took the lead" or "moved into first" with no party named
-  -> "unspecified"; a plain position ("led", "was first") -> null.
+  top) is rank 1. rank_from = which end the sentence counts that position from, and
+  it is required: "highest" when the sentence names the largest number ("peaking at
+  1,263 seconds", "the most orders", "the largest revenue"); "lowest" when it names
+  the smallest ("a year-low", "the fewest returns", "the shortest time"); "best" or
+  "worst" when the sentence uses a quality word instead of naming an end ("led all
+  states", "set the benchmark", "peak fulfillment efficiency", "the worst delivery
+  performance"), because which number is good depends on the metric. Rank counts from
+  that end: "the third-shortest delivery time" is rank 3 with rank_from "lowest".
+  group_by = what is being ranked: an entity dimension in the report's words
+  ("state", "region", "product") or a time grain ("quarter", "month", "year").
+  subject = the entity holding the rank; for a time-grain ranking put the ranked
+  period in period and leave subject null. scope = the universe the sentence ranks
+  within, when it states one: for a time-grain ranking a period ("of the year" ->
+  that year; "of the first half" -> "2019-01 to 2019-06"); for an entity ranking any
+  restriction the sentence puts on which entities are in the running, copied verbatim
+  ("among top companies", "of the major carriers"). Null when the sentence restricts
+  nothing. displaced is non-null only when the sentence asserts an overtaking, a
+  change of rank over time: "overtook Rio" -> "Rio"; "took the lead" or "moved into
+  first" with no party named -> "unspecified"; a plain position ("led", "was
+  first") -> null.
 share  A stated percentage of a total held by an entity: "accounted for 22.4% of all
   orders". value in percent; subject required (who holds the share); metric names
   the share itself ("order share").
@@ -99,16 +111,16 @@ Text: "Customer satisfaction improved in the second quarter even as volumes rose
 Text: "The North region led all regions in units sold, and the West overtook the South
 for second place."
 -> ranking, span "The North region led all regions in units sold", rank 1,
-   group_by "region", subject "North", metric "units sold", period "2019",
-   displaced null, scope null
+   rank_from "best", group_by "region", subject "North", metric "units sold",
+   period "2019", displaced null, scope null
 -> ranking, span "the West overtook the South for second place", rank 2,
-   group_by "region", subject "West", metric "units sold", period "2019",
-   displaced "South", scope null
+   rank_from "best", group_by "region", subject "West", metric "units sold",
+   period "2019", displaced "South", scope null
 
 Text: "March was the strongest month of the first half, and returns nearly tripled."
 -> ranking, span "March was the strongest month of the first half", rank 1,
-   group_by "month", subject null, metric "units sold", period "2019-03",
-   scope "2019-01 to 2019-06", displaced null
+   rank_from "best", group_by "month", subject null, metric "units sold",
+   period "2019-03", scope "2019-01 to 2019-06", displaced null
 -> growth, span "returns nearly tripled", metric "returns", value null,
    direction "increase", period "2019-03", baseline_period null, confidence "low"
 
@@ -117,8 +129,9 @@ top spot in January, accounted for 22.4% of all units."
 -> growth, span "Units sold fell 8.2% year over year", metric "units sold",
    value 8.2, direction "decrease", period "2019", baseline_period "2018"
 -> point_value, span "to 41,200", metric "units sold", value 41200, period "2019"
--> ranking, span "had taken top spot in January", rank 1, group_by "region",
-   subject "East", metric "units sold", period "2019-01", displaced "unspecified"
+-> ranking, span "had taken top spot in January", rank 1, rank_from "best",
+   group_by "region", subject "East", metric "units sold", period "2019-01",
+   displaced "unspecified"
 -> share, span "accounted for 22.4% of all units", metric "share of all units",
    subject "East", value 22.4, period "2019"
 
@@ -126,6 +139,22 @@ Text (a paragraph about the East region): "... with 3,900 units and 512,004.10 i
 -> point_value, span "with 3,900 units", metric "units sold", subject "East", value 3900
 -> point_value, span "512,004.10 in revenue", metric "revenue", subject "East",
    value 512004.10
+
+Text: "Handling time peaked at 41.2 minutes in the second quarter, and the fourth
+quarter posted a low of 33.8 minutes."
+-> ranking, span "Handling time peaked at 41.2 minutes in the second quarter", rank 1,
+   rank_from "highest", group_by "quarter", subject null, metric "handling time",
+   period "2019-Q2", scope "2019", displaced null
+-> ranking, span "the fourth quarter posted a low of 33.8 minutes", rank 1,
+   rank_from "lowest", group_by "quarter", subject null, metric "handling time",
+   period "2019-Q4", scope "2019", displaced null
+   (both are rank 1: each counts from the end its own wording names.)
+
+Text: "Among the major carriers, Nordic Freight had the highest average shipment value."
+-> ranking, span "Among the major carriers, Nordic Freight had the highest average
+   shipment value", rank 1, rank_from "highest", group_by "carrier",
+   subject "Nordic Freight", metric "average shipment value", period "2019",
+   scope "the major carriers", displaced null
 
 Text: "Volumes remained stable across the year."
 -> comparison, span "Volumes remained stable across the year", metric "units sold",

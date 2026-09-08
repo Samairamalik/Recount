@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass
+from typing import Literal
 
 from recount.claims import AbstainReason, Claim, Comparison, Growth, PointValue, Ranking, Share
 from recount.compile.periods import Grain, PeriodError, parse_period, unit_grain
@@ -25,6 +26,7 @@ from recount.compile.plans import (
     GrowthPlan,
     Measure,
     Period,
+    Polarity,
     RankPlan,
     SharePlan,
     TimeKey,
@@ -199,11 +201,18 @@ def _ranking(
                 f" add it under entities.{dim}.aliases",
             )
         subject_key = resolved[1]
-    if metric.polarity is None:  # G9
+    if claim.rank_from is None:  # G12 — the sentence's end, never guessed from the config
+        return Abstain(
+            _AMBIGUOUS,
+            f"no rank direction: is rank {claim.rank} the highest or the lowest '{name}'?",
+        )
+    if claim.rank_from in ("best", "worst") and metric.polarity is None:  # G9
         return Abstain(
             _SCHEMA_GAP,
-            f"ranking by '{name}' needs polarity (rank 1 = best); set metrics.{name}.polarity",
+            f"ranking '{name}' from the {claim.rank_from} end needs polarity (which way is"
+            f" better); set metrics.{name}.polarity",
         )
+    order = _order(claim.rank_from, metric.polarity)
     if claim.displaced is not None:  # G10 — precise sentence, missing capability
         return Abstain(
             _UNSUPPORTED,
@@ -218,8 +227,9 @@ def _ranking(
         if claim.scope is not None:  # G11
             return Abstain(
                 _AMBIGUOUS,
-                f"scope '{claim.scope}' on an entity ranking conflicts with period"
-                f" '{claim.period}'; the period is the universe",
+                f"the span restricts the ranking universe to '{claim.scope}'; Recount ranks"
+                f" every {claim.group_by} in period '{claim.period}' (minus any below"
+                f" metrics.{name}.min_rows) and cannot resolve '{claim.scope}'",
             )
         return RankPlan(
             time_column=cfg.time_column,
@@ -227,7 +237,8 @@ def _ranking(
             period=period,
             group_by=key,
             subject_key=subject_key,
-            polarity=metric.polarity,
+            order=order,
+            min_rows=metric.min_rows,
         )
     # G8 — the period is one unit of the grain; scope is the universe and must contain it.
     if unit_grain(period) != grain:
@@ -249,8 +260,24 @@ def _ranking(
         period=scope,
         group_by=key,
         subject_key=period.start.isoformat(),
-        polarity=metric.polarity,
+        order=order,
+        min_rows=metric.min_rows,
     )
+
+
+def _order(
+    rank_from: Literal["highest", "lowest", "best", "worst"], polarity: Polarity | None
+) -> Literal["asc", "desc"]:
+    """Which end rank 1 counts from (G9/G12). 'highest'/'lowest' name the numeric end;
+    'best'/'worst' are quality wording and resolve through polarity, which G9 has already
+    required to be present."""
+    if rank_from in ("highest", "lowest"):
+        return "desc" if rank_from == "highest" else "asc"
+    assert polarity is not None  # G9
+    best_end: Literal["asc", "desc"] = "desc" if polarity == "higher_is_better" else "asc"
+    if rank_from == "best":
+        return best_end
+    return "asc" if best_end == "desc" else "desc"
 
 
 def _echoes(claim: Claim, cfg: SemanticConfig, name: str) -> bool:

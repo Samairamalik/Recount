@@ -72,7 +72,12 @@ recount verify REPORT --data DATA --config CONFIG
 
 `metrics.yml` binds the report's vocabulary to columns: `time_column`, `entities`
 (dimension → column + aliases → stored value) and `metrics` (`agg` sum / count / avg /
-share, `column`, `aliases`, `round`, `polarity`). Recount verifies against these
+share, `column`, `aliases`, `round`, `polarity`, `min_rows`). `polarity` says which
+direction of the metric is better — it is needed for "improved / worsened" comparisons and
+for rankings written as a quality ("led all states"), and it no longer decides which end a
+rank counts from: the claim carries that (`rank_from`). `min_rows` is the rows a group
+needs to be in a ranking universe at all; unset means every group ranks, and a subject
+below it abstains `no_data` rather than FAILing. Recount verifies against these
 definitions and nothing else: a word not listed is an UNVERIFIABLE `schema_gap` with the
 key that would fix it, never a guess (docs/abstention.md). `examples/olist/metrics.yml`
 is a complete one, including two commented-out opt-in aliases and why they are off.
@@ -91,8 +96,9 @@ recount init --data DATA [--out metrics.yml] [--time-column COL] [--force]
 
 Reads the columns and types (nothing else) and writes a commented template: the first
 DATE / TIMESTAMP column as `time_column`, a `row_count` metric to rename, `total_` /
-`avg_` metrics per numeric column, one entity dimension per text column (id-like columns
-skipped), and a commented `share` metric. The template loads as written; the aliases are
+`avg_` metrics per numeric column (each with an active `min_rows: 30`, since a mean over
+fewer rows than that should not win a ranking), one entity dimension per text column
+(id-like columns skipped), and a commented `share` metric. The template loads as written; the aliases are
 what you edit. Refuses to overwrite without `--force`.
 
 ## promptfoo assertion (`recount-verify`)

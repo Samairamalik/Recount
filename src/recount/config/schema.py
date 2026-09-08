@@ -53,6 +53,12 @@ class Metric(BaseModel):
     round: int | None = Field(default=None, ge=0)
     # No default on purpose: a silent "higher is better" is a false-accept path.
     polarity: Literal["higher_is_better", "lower_is_better"] | None = None
+    # Minimum rows a group needs to enter a ranking universe by this metric (Stage 8,
+    # F-4: on real data a one-row group wins any average). None means no filter, so no
+    # existing config changes behaviour; `recount init` writes an active 30 on avg
+    # metrics. A subject below it abstains no_data (N5), never FAILs: the claim is not
+    # adjudicable at the support the config declares, which is not the same as wrong.
+    min_rows: int | None = Field(default=None, ge=1)
 
     @model_validator(mode="after")
     def _column_matches_agg(self) -> Metric:

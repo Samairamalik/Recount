@@ -107,8 +107,13 @@ class RankPlan(_Frozen):
     # The group the claim is about, as the engine's VARCHAR key: an entity value
     # ("SP") or a grain start date ("2017-07-01").
     subject_key: str
-    # Required: rank 1 means "best", and without polarity there is no ordering.
-    polarity: Polarity
+    # Which end rank 1 counts from, already resolved by the compiler from the claim's
+    # `rank_from` and, for best/worst, the metric's polarity (abstention G9/G12). The
+    # engine renders it as the ORDER BY keyword and nothing else.
+    order: Literal["asc", "desc"]
+    # Groups with fewer rows than this are not in the universe (metrics.<m>.min_rows).
+    # None means every group ranks, which is the behaviour of every config without it.
+    min_rows: int | None = Field(default=None, ge=1)
 
 
 class SharePlan(_Frozen):

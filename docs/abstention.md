@@ -101,7 +101,7 @@ Two metrics matching after `norm()` cannot happen: config validation rejects it 
 
 ### G — ranking: group_by, subject, polarity, displaced, scope
 
-Evaluated in the order G1–G3, G4–G6, G7, G9, G10, then the P rows on `period`
+Evaluated in the order G1–G3, G4–G6, G7, G12, G9, G10, then the P rows on `period`
 and `scope`, then G8/G11.
 
 | id | condition | outcome | reason | detail | fixture |
@@ -114,13 +114,34 @@ and `scope`, then G8/G11.
 | G6 | time-grain ranking with `subject` set ("SP's best quarter") | abstain | `unsupported_claim_type` | `ranking {grain}s within an entity is not supported; RankPlan has no entity scope` | synthetic |
 | G7 | time-grain ranking, grain = `year` | abstain | `no_data` | `ranking years is withheld: a partly covered year would rank against full ones` — a **stopgap** for partial-year data coverage, superseded by the runtime check in P12 (the only `no_data` the compiler raises) | synthetic |
 | G8 | time-grain ranking (month/quarter): `period` must parse to **exactly one unit of that grain** (the subject key is that unit's start date) and `scope` must parse and contain that unit; the universe is `scope` | plan | — | period not one unit: abstain `ambiguous`, `period '{period}' is not a single {grain}; which {grain} holds rank {rank}?`; scope null: abstain `ambiguous`, `no scope stated: rank {rank} among which {grain}s?`; unit outside scope: abstain `ambiguous`, `period '{period}' lies outside scope '{scope}'` | c23 (`2017-Q3`, scope `2017`, F3); synthetic `2017` + quarter, and scope null |
-| G9 | ranking metric has no `polarity` | abstain | `schema_gap` | `ranking by '{metric}' needs polarity (rank 1 = best); set metrics.{metric}.polarity` | synthetic (polarity removed) |
+| G9 *(amended Stage 8, F-3)* | `rank_from` ∈ {`best`, `worst`} and the metric has no `polarity` | abstain | `schema_gap` | `ranking '{metric}' from the {rank_from} end needs polarity (which way is better); set metrics.{metric}.polarity` | synthetic (polarity removed) |
+| G12 *(Stage 8, F-3)* | `rank_from` is null | abstain | `ambiguous` | `no rank direction: is rank {rank} the highest or the lowest '{metric}'?` | synthetic; every claims file and recording predating the field |
 | G10 | `displaced` is set (any non-null value; `"unspecified"` is the reserved value for an unnamed party) | abstain | `unsupported_claim_type` | `'displaced {displaced}' asserts an overtaking, a rank change between two periods; rank-change verification is not supported` — the sentence is precise; the tool lacks the capability | c11 (F2) |
-| G11 | entity ranking with `scope` set | abstain | `ambiguous` | `scope '{scope}' on an entity ranking conflicts with period '{period}'; the period is the universe` | synthetic |
+| G11 *(amended Stage 8, F-4)* | entity ranking with `scope` set: the sentence restricts which entities are in the running ("among top companies") | abstain | `ambiguous` | `the span restricts the ranking universe to '{scope}'; Recount ranks every {group_by} in period '{period}' (minus any below metrics.{metric}.min_rows) and cannot resolve '{scope}'` | synthetic |
 
 `scope` is a Stage 1 amendment to `Ranking` (logged in docs/learning-log.md like
 `NO_DATA`): the period string naming the ranking universe of a time-grain
-ranking ("of the year" → `2017`). Nothing is ever inferred from a calendar.
+ranking ("of the year" → `2017`). Nothing is ever inferred from a calendar. Stage 8 (F-4)
+extends it to entity rankings, where it carries the sentence's own restriction verbatim
+("among top companies") so that G11 can refuse it instead of the extractor dropping it and
+the claim being ranked against every group in the data.
+
+**G9/G12 rationale (F-3).** Until Stage 8 the end rank 1 counted from came from
+`metrics.<m>.polarity`, which answers a different question — "which way is better" — and a
+truthful superlative on a `lower_is_better` metric ("peaking at 1,263.31 seconds") got a
+confident FAIL. Which end a sentence names is a property of the sentence, and one report
+holds both ends of one metric, so no per-metric config value can be right for both. The
+claim now carries `rank_from`, and it is the only thing that decides: `highest`/`lowest`
+name the numeric end, `best`/`worst` are quality wording and route through `polarity`
+exactly as Comparison's `better`/`worse` do (D2/D3). Null is never read as "highest"
+(G12). Consequence: a ranking whose claim names the numeric end no longer needs `polarity`
+at all, which is coverage the old G9 refused.
+
+**min_rows (F-4).** `metrics.<m>.min_rows` is the row count a group needs to be in a
+ranking universe. It is config, not compiler: the compiler passes it to the plan and never
+chooses a value. Unset (the default) means every group ranks, so no existing config
+changes behaviour; `recount init` writes an active `30` on generated `avg` metrics. A
+subject below the threshold is engine row N5, an abstention, never a FAIL.
 
 ### D — comparison direction and polarity
 
@@ -214,6 +235,7 @@ if the reason taxonomy ever grows.
 | N2 | growth baseline empty or zero | `no_data` | engine |
 | N3 | comparison current or baseline empty | `no_data` | engine |
 | N4 | ranking subject not among the groups | `no_data` | engine |
+| N5 *(Stage 8, F-4)* | ranking subject is in the data but below `metrics.<m>.min_rows` | `no_data` | `subject '{key}' has {n} row(s), below min_rows {k}: it is not in the ranking universe, so its position is not adjudicable at the support this config declares`. **Never a FAIL**: FAIL asserts the number is wrong, and under-support is not wrongness (docs/design.md §3). |
 
 ## 2. Config-level rules (enforced in `SemanticConfig` validation)
 
@@ -235,6 +257,8 @@ if the reason taxonomy ever grows.
 
 | F5 *(Stage 6)* | c16, c17, c23, c26, c34, c36, c41 (c40 and c53 were on the list until changelog 7 aliased `days for delivery`) | `expected_verdict` PASS (c41: FAIL) | unchanged, plus `echo_gap: true` | under M3 these nine spans name no config wording for their metric ("to hit 1,447,714.17", "delivery performance improved", "followed closely in third place"). `expected_verdict` stays the truth of the assertion, which the benchmark pools (B3) read, so the frozen suite is byte-identical; the goldens expect `UNVERIFIABLE/schema_gap` `metric_echo_failed` on them. c41 is the spike's wrong_ranking corruption: with M3 it is abstained, not detected, and `test_every_corruption_fails_for_the_right_reason` says so. |
 
+| F6 *(Stage 8, F-3)* | c11, c23, c34, c36, c41 — every ranking label | no `rank_from` | `rank_from: "best"` | the field is new and no claim may be read as "highest" by default (G12). Every Olist superlative is quality wording ("took the lead", "peak fulfillment efficiency", "set the national benchmark", "secured the second position", "followed closely in third place"), so all five are `best` and every expected verdict is unchanged — which is why the keyless oracle run moved by nothing. The acceptance dataset is where the two come apart. |
+
 After F1 the 57 fixtures split PASS 45 / FAIL 6 / UNVERIFIABLE 6; after F5 and
 changelog 7 a correct verifier returns PASS 39 / FAIL 5 / UNVERIFIABLE 13 on them
 (seven M3 abstentions).
@@ -243,6 +267,12 @@ changelog 7 a correct verifier returns PASS 39 / FAIL 5 / UNVERIFIABLE 13 on the
 
 - `Ranking.scope: str | None = None` — the ranking universe as written.
 - `Comparison.value` gains `ge=0` — unsigned magnitude, sign only in `direction`.
+- *(Stage 8, F-3)* `Ranking.rank_from: Literal["highest","lowest","best","worst"] | None`
+  — which end rank 1 counts from, as the sentence names it. Named `rank_from` rather than
+  `direction` so the flat wire schema keeps one enum per key: a third value set on
+  `direction` would let a growth claim be typed "highest".
+- *(Stage 8, F-4)* `Metric.min_rows: int | None` (config, not claim) and `RankPlan` gains
+  `order` (replacing `polarity`, already resolved by G9/G12) and `min_rows`.
 
 ## 5. Known limitations and deferred work
 
@@ -254,6 +284,10 @@ changelog 7 a correct verifier returns PASS 39 / FAIL 5 / UNVERIFIABLE 13 on the
   G7 (year rankings withheld) is the compiler-side stopgap until then.
 - **V3, direction-only growth** is abstained along with vague growth (schema cannot tell them apart).
 - **Rank change** (G10): "overtook" claims need two rankings and a comparison of ranks; not supported.
+- **`min_rows` is not the P12 fix.** It keeps a thinly-covered group out of a ranking
+  universe, which narrows one corner of P12, but it is a support threshold the user
+  declares, not a coverage check against the data's range. G7 and the V2 runtime check
+  stand unchanged.
 - **M3 and context-bound metrics** (Stage 6): a span that names no metric can never
   compile, whatever the surrounding sentence says. This is deliberate (F-2), and it is
   the reason the F-3 "overall" alias recovers only spans that contain the word.

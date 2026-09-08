@@ -152,7 +152,7 @@ def test_rank_by_month_grain_and_absent_subject() -> None:
         period=YEAR,
         group_by=TimeKey(grain="month"),
         subject_key="2017-11-01",
-        polarity="higher_is_better",
+        order="desc",
     )
     computed = execute(DS, plan)
     assert computed.row_counts["n_groups"] == 12
@@ -166,6 +166,7 @@ def test_rank_by_month_grain_and_absent_subject() -> None:
         metric="orders",
         period="2017-11",
         rank=1,
+        rank_from="highest",
         group_by="month",
     )
     assert verify(DS, claim, plan).verdict == "PASS"
@@ -180,7 +181,7 @@ def test_rank_excludes_null_keys_and_counts_groups() -> None:
         period=YEAR,
         group_by=EntityKey(column="state"),
         subject_key="SP",
-        polarity="higher_is_better",
+        order="desc",
     )
     computed = execute(DS, plan)
     assert computed.row_counts == {"n_rows": 43428, "n_groups": 27}

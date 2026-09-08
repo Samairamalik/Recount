@@ -138,7 +138,7 @@ the user can do about it:
 | `schema_gap` | the config lacks the metric, entity, dimension or polarity the claim needs | a line of YAML; the verdict `detail` names the key and the HTML drawer offers a stub |
 | `ambiguous` | the sentence is irreducibly vague (no baseline, no number, no scope) | a rewrite of the sentence |
 | `unsupported_claim_type` | the sentence is precise; the tool lacks the capability (rank change, "overtook") | an issue |
-| `no_data` | the slice is empty, the growth baseline is zero, the subject is not among the groups | check the period, the entity, or the data |
+| `no_data` | the slice is empty, the growth baseline is zero, the subject is not among the groups, or the subject is below the metric's `min_rows` | check the period, the entity, the threshold, or the data |
 
 The full decision table, written before the compiler and reviewed row by row, is
 [abstention.md](abstention.md). Three things about it matter more than any row:
@@ -149,7 +149,22 @@ The full decision table, written before the compiler and reviewed row by row, is
 2. **The table never grows a guess.** When a situation is not in it, the compiler abstains
    `ambiguous` and the row is added first. The spike's silent "previous quarter" baseline
    fallback is the canonical example of what is not allowed.
-3. **Abstention has a measured cost, and the cost is published.** The echo gate (M3)
+3. **A FAIL asserts the number is wrong; anything less is an abstention.** This is the
+   line that decides borderline rows, and Stage 8's `min_rows` (abstention N5) is the
+   clearest case. On real data a group with one row wins any average ranking, so a
+   ranking universe needs a minimum support — and when the *subject* is the
+   under-supported group, Recount abstains rather than FAILing. The honest counter-case
+   is real and was argued before the ruling: "5 Star Taxi recorded the highest average
+   trip value" is misleading in any business sense when the winner has 364,463 trips and
+   the group above it has one, and an abstention lets that sentence through unflagged
+   where a FAIL would stop it. It loses on three grounds. Whether a mean over n rows
+   means anything is a statistical judgement, and Recount's licence is arithmetic against
+   data, not statistics. A red CI check has to mean "this number is wrong" or it stops
+   being worth blocking a merge for — the same credibility argument that made F-3 the
+   highest-severity finding of the acceptance run. And the threshold is user-configured,
+   so a FAIL would flip to PASS on a YAML edit with the data untouched; abstentions are
+   the label already allowed to depend on the config, and every `schema_gap` does.
+4. **Abstention has a measured cost, and the cost is published.** The echo gate (M3)
    turned two fabricated-metric false accepts into abstentions and, in the same move, took
    nine detections and five clean PASSes to `metric_echo_failed`; both numbers are in
    [benchmark.md](benchmark.md) changelog 5. Detection is never reported without coverage
@@ -269,6 +284,9 @@ research that is claimed.
   confidently wrong verdicts; Recount cannot know that "revenue" should have excluded
   freight.
 - It does not read the clock or infer periods. "Last quarter" abstains.
+- It does not resolve a sentence's own restriction of a ranking universe ("among top
+  companies"): the phrase is carried into the claim and abstains `ambiguous` (G11). A
+  minimum support is expressible instead, per metric, as `min_rows`.
 - It does not check rank changes ("overtook"), COUNT DISTINCT metrics, shares of averages,
   or claims about periods partly outside the data (a documented false-PASS path,
   abstention.md §5: today the query runs over the rows present; the planned fix abstains

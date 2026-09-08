@@ -12,7 +12,10 @@ No DuckDB here. Every branch is enumerated so it can be explained unaided:
   ranking displaced set -> UNVERIFIABLE unsupported_claim_type (rank change; abstention G10)
   half_ulp: PASS iff |stated - computed| <= 0.5 * 10^-d, d = decimals in the stated number
             as written in the span ("6.00%" -> 2), else as the float reads (changelog 2)
-  rank:     PASS iff the subject's SQL RANK() equals the claimed rank (ties share a rank)
+  rank:     PASS iff the subject's SQL RANK() equals the claimed rank (ties share a rank).
+            Rank 1 counts from the end the claim's `rank_from` names, resolved into the
+            plan's ORDER BY by the compiler; a subject below the metric's min_rows is not
+            in the universe and abstains no_data (N5), it is never FAILed.
 
 NULLs: AVG excludes NULLs and SUM ignores them (SQL semantics); COUNT(*) counts every
 row. The verdict reports n_rows and n_used so the denominator is visible.
@@ -45,7 +48,10 @@ class PolicyResult:
 class RankRow:
     key: str
     value: float | None
-    rank: int
+    # None when the group is below the metric's min_rows: it is in the data but not in
+    # the ranking universe (abstention N5).
+    rank: int | None
+    n_rows: int = 0
 
 
 def _abstain(reason: AbstainReason, detail: str, claimed: float | None = None) -> PolicyResult:
@@ -199,7 +205,12 @@ def check_comparison(
     return _half_ulp(claim.value, abs(diff), signed_computed=diff, span=claim.span)
 
 
-def check_ranking(claim: Ranking, subject_key: str, rows: tuple[RankRow, ...]) -> PolicyResult:
+def check_ranking(
+    claim: Ranking,
+    subject_key: str,
+    rows: tuple[RankRow, ...],
+    min_rows: int | None = None,
+) -> PolicyResult:
     if claim.displaced is not None:  # abstention G10; the compiler decides this first
         return _abstain(
             AbstainReason.UNSUPPORTED_CLAIM_TYPE,
@@ -212,6 +223,14 @@ def check_ranking(claim: Ranking, subject_key: str, rows: tuple[RankRow, ...]) -
         return _abstain(
             AbstainReason.NO_DATA,
             f"subject {subject_key!r} is not among the groups",
+            float(claim.rank),
+        )
+    if subject.rank is None:  # N5 — in the data, below the support the config declares
+        return _abstain(
+            AbstainReason.NO_DATA,
+            f"subject {subject_key!r} has {subject.n_rows} row(s), below min_rows"
+            f" {min_rows}: it is not in the ranking universe, so its position is not"
+            " adjudicable at the support this config declares",
             float(claim.rank),
         )
     ok = subject.rank == claim.rank

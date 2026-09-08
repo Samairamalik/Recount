@@ -75,11 +75,15 @@ def metrics_template(dataset: str, columns: dict[str, str], time_column: str | N
         "  # aliases: every way the report words this metric (matched as whole words,",
         "  # accent- and case-insensitive). round: decimals to round the aggregate to before",
         "  # comparing (pin it for SUM over floats). polarity: which direction is 'better';",
-        "  # required for rankings and for 'improved/worsened'; there is no default on purpose.",
+        "  # required for 'improved/worsened' and for rankings written as a quality",
+        "  # ('led all states'); there is no default on purpose. min_rows: the rows a group",
+        "  # needs to be in a ranking universe at all — without it a one-row group wins any",
+        "  # average ranking, and a subject below it abstains (no_data), never FAILs.",
         "  row_count:",
         "    agg: count",
         "    aliases: [rows, records]   # <- rename to what a row IS (orders, visits, tickets)",
         "    polarity: higher_is_better",
+        "    # min_rows: 30",
     ]
     for c in numerics:
         lines += [
@@ -89,10 +93,12 @@ def metrics_template(dataset: str, columns: dict[str, str], time_column: str | N
             f"    aliases: [total {c.replace('_', ' ')}]",
             "    round: 2",
             "    # polarity: higher_is_better",
+            "    # min_rows: 30",
             f"  avg_{_key(c)}:",
             "    agg: avg",
             f"    column: {c}",
             f"    aliases: [average {c.replace('_', ' ')}]",
+            "    min_rows: 30   # a mean over fewer rows than this does not enter a ranking",
             "    # polarity: lower_is_better",
         ]
     if texts:

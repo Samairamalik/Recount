@@ -39,8 +39,10 @@ def test_share_of_an_average_is_rejected() -> None:
         )
 
 
-def test_rank_requires_polarity() -> None:
-    with pytest.raises(ValidationError, match="polarity"):
+def test_rank_requires_an_order() -> None:
+    """Stage 8: the plan carries the resolved end (compiler rows G9/G12), so a plan
+    without one cannot be built and the engine has no default to fall back on."""
+    with pytest.raises(ValidationError, match="order"):
         RankPlan.model_validate(
             {
                 "time_column": "d",
@@ -59,7 +61,7 @@ def test_plans_are_frozen_closed_and_round_trip() -> None:
         period=P,
         group_by=TimeKey(grain="quarter"),
         subject_key="2017-07-01",
-        polarity="lower_is_better",
+        order="asc",
     )
     again = PlanAdapter.validate_json(plan.model_dump_json())
     assert again == plan and again.kind == "rank"

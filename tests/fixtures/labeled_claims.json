@@ -237,6 +237,7 @@
         "period": "2017-Q1",
         "subject": "Sao Paulo",
         "rank": 1,
+        "rank_from": "best",
         "group_by": "state",
         "displaced": "unspecified"
       },
@@ -465,6 +466,7 @@
         "metric": "avg_delivery_days",
         "period": "2017-Q3",
         "rank": 1,
+        "rank_from": "best",
         "group_by": "quarter",
         "scope": "2017"
       },
@@ -674,6 +676,7 @@
         "period": "2017",
         "subject": "Sao Paulo",
         "rank": 1,
+        "rank_from": "best",
         "group_by": "state"
       },
       "expected_verdict": "PASS",
@@ -722,6 +725,7 @@
         "period": "2017",
         "subject": "Rio de Janeiro",
         "rank": 2,
+        "rank_from": "best",
         "group_by": "state"
       },
       "expected_verdict": "PASS",
@@ -824,6 +828,7 @@
         "period": "2017",
         "subject": "Santa Catarina",
         "rank": 3,
+        "rank_from": "best",
         "group_by": "state"
       },
       "clean_span": "Minas Gerais followed closely in third place",

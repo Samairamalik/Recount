@@ -97,7 +97,7 @@ def cmp(**kw: Any) -> Comparison:
 def rank(**kw: Any) -> Ranking:
     base: dict[str, Any] = {
         "id": "t", "confidence": "high", "metric": "orders", "rank": 1,
-        "group_by": "state", "subject": "Sao Paulo", "period": "2017",
+        "rank_from": "best", "group_by": "state", "subject": "Sao Paulo", "period": "2017",
     }  # fmt: skip
     return Ranking(type="ranking", **_echoing(base | kw))
 
@@ -167,7 +167,7 @@ def test_binding_b_time_grain_group_by_resolves_from_time_column_never_entities(
         period=Y2017,  # scope "2017"
         group_by=TimeKey(grain="quarter"),
         subject_key="2017-07-01",
-        polarity="lower_is_better",
+        order="asc",  # rank_from "best" through lower_is_better (G9)
     )
 
 
@@ -175,7 +175,7 @@ def test_g2_entity_ranking_keys_on_the_dimension_column() -> None:
     plan = compile_claim(echoed("c36"), CFG)
     assert isinstance(plan, RankPlan)
     assert plan.group_by == EntityKey(column="state") and plan.subject_key == "RJ"
-    assert plan.period == Y2017 and plan.polarity == "higher_is_better"
+    assert plan.period == Y2017 and plan.order == "desc"
 
 
 def test_g3_unknown_group_by_is_schema_gap() -> None:
@@ -233,8 +233,32 @@ def test_g8_period_must_be_one_unit_and_scope_must_contain_it() -> None:
     )
 
 
-def test_g9_ranking_needs_polarity() -> None:
-    abstains(rank(), AbstainReason.SCHEMA_GAP, "needs polarity", without_polarity(CFG, "orders"))
+def test_g9_a_best_worst_ranking_needs_polarity() -> None:
+    """G9 (Stage 8): polarity is needed only where the claim ranks by quality. A claim
+    that names the numeric end itself compiles without it — coverage the old rule lost."""
+    no_pol = without_polarity(CFG, "orders")
+    abstains(rank(), AbstainReason.SCHEMA_GAP, "needs polarity", no_pol)
+    abstains(rank(rank_from="worst"), AbstainReason.SCHEMA_GAP, "needs polarity", no_pol)
+    plan = compile_claim(rank(rank_from="highest"), no_pol)
+    assert isinstance(plan, RankPlan) and plan.order == "desc"
+
+
+def test_g12_rank_direction_comes_from_the_claim_not_the_polarity() -> None:
+    """F-3: which end rank 1 counts from is the sentence's, not the config's. Both ends
+    of one metric are expressible, and a claim that names neither abstains."""
+    assert CFG.metrics["avg_delivery_days"].polarity == "lower_is_better"
+    slowest = compile_claim(
+        rank(metric="avg_delivery_days", rank_from="highest", subject="Sao Paulo"), CFG
+    )
+    fastest = compile_claim(
+        rank(metric="avg_delivery_days", rank_from="lowest", subject="Sao Paulo"), CFG
+    )
+    assert isinstance(slowest, RankPlan) and slowest.order == "desc"
+    assert isinstance(fastest, RankPlan) and fastest.order == "asc"
+    # "best" on a lower_is_better metric is the low end; "worst" is the high end
+    assert compile_claim(rank(metric="avg_delivery_days", rank_from="best"), CFG).order == "asc"
+    assert compile_claim(rank(metric="avg_delivery_days", rank_from="worst"), CFG).order == "desc"
+    abstains(rank(rank_from=None), AbstainReason.AMBIGUOUS, "no rank direction")
 
 
 def test_g10_displaced_is_unsupported_rank_change() -> None:
@@ -242,8 +266,16 @@ def test_g10_displaced_is_unsupported_rank_change() -> None:
     abstains(rank(displaced="Rio de Janeiro"), AbstainReason.UNSUPPORTED_CLAIM_TYPE, "overtaking")
 
 
-def test_g11_scope_on_an_entity_ranking_is_ambiguous() -> None:
-    abstains(rank(scope="2017"), AbstainReason.AMBIGUOUS, "scope '2017' on an entity ranking")
+def test_g11_a_restricted_entity_ranking_universe_is_ambiguous() -> None:
+    """F-4: the sentence's own restriction reaches the compiler instead of being dropped,
+    and an unquantified one cannot be resolved — so it abstains rather than ranking the
+    subject against every group in the data and FAILing a true sentence."""
+    abstains(
+        rank(scope="among top companies"),
+        AbstainReason.AMBIGUOUS,
+        "restricts the ranking universe to 'among top companies'",
+    )
+    abstains(rank(scope="2017"), AbstainReason.AMBIGUOUS, "cannot resolve '2017'")
 
 
 # ------------------------------------------------------------------ D
