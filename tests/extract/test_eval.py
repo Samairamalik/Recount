@@ -1,7 +1,9 @@
 """The extraction mini-eval: the matching policy on a miniature, then the recorded runs
 against the 57 labels. The recorded numbers are the ones docs/eval.md reports; if they
-drift, the doc is stale and this test says so. Both recordings were re-made in Stage 5
-after the wire schema made every key required (docs/benchmark.md §6, changelog 1)."""
+drift, the doc is stale and this test says so. Both recordings were re-made in Stage 8
+after `Ranking.rank_from` changed the prompt and the wire schema (docs/benchmark.md §6,
+changelog 8; docs/eval.md, Stage 8 addendum), which is also why the numbers below moved
+without any change in recall: extraction is not a function of the text (F-4)."""
 
 from __future__ import annotations
 
@@ -129,23 +131,24 @@ def test_recorded_span_validity_is_total_by_construction(labels: dict[str, Any])
     extraction = extract_claims(artifact, MockClient(RECORDING))
     assert all(c.span in artifact for c in extraction.claims)
     assert extraction.rejected == ()
-    assert len(extraction.claims) == 63
+    assert len(extraction.claims) == 56
 
 
 def test_recorded_numbers_match_docs_eval_md(recorded: EvalReport) -> None:
     s = recorded.summary()
     assert (s["labels"], s["claims"], s["matched"], s["merged"], s["missed"], s["spurious"]) == (
-        57, 63, 55, 0, 2, 8
+        57, 56, 55, 0, 2, 1
     )  # fmt: skip
-    assert s["recall"] == 0.9649 and s["precision"] == 0.873
+    assert s["recall"] == 0.9649 and s["precision"] == 0.9821
     assert s["span_validity"] == 1.0
     assert recorded.missed == ("c1", "c30")
-    assert s["binding"]["metric"] == (55, 55)
+    assert s["binding"]["metric"] == (52, 55)
     assert s["binding"]["period"] == (55, 55)
     assert s["binding"]["subject"] == (28, 28)
     assert s["binding"]["direction"] == (10, 10)
     assert s["binding"]["type"] == (53, 55)
     assert s["binding"]["value"] == (47, 50)
+    assert s["binding"]["rank"] == (5, 5)  # Stage 8: rank_from did not disturb rank binding
     # Stage 6 (abstention M3): matched claims whose span names no config wording for the
     # metric now abstain metric_echo_failed; the extractor recording is unchanged. Was
     # {"agree": 54, "other": 1} in Stage 5, {44, 11} at changelog 5, {46, 9} once changelog 7
@@ -164,17 +167,19 @@ def test_recorded_flash_lite_numbers_match_docs_eval_md(labels: dict[str, Any]) 
     extraction = extract_claims(artifact, MockClient(LITE_RECORDING))
     assert extraction.model == "gemini-3.1-flash-lite"
     assert len(extraction.claims) == 51
-    assert sorted(r.reason for r in extraction.rejected) == ["foreign_field"] * 4
+    assert sorted(r.reason for r in extraction.rejected) == ["foreign_field"] * 2 + [
+        "invalid_claim"
+    ] * 2  # the wire union on `direction`: a growth word typed onto a comparison
     dataset = load_dataset(Path("examples/olist/orders.parquet"), CFG)
     rep = evaluate(artifact, labels["claims"], extraction, CFG, dataset)
     s = rep.summary()
-    assert (s["matched"], s["merged"], s["missed"], s["spurious"]) == (51, 1, 5, 0)
+    assert (s["matched"], s["merged"], s["missed"], s["spurious"]) == (51, 0, 6, 0)
     assert s["recall"] == 0.8947 and s["precision"] == 1.0 and s["span_validity"] == 1.0
-    assert rep.missed == ("c1", "c18", "c24", "c29", "c30") and rep.merged == ("c28",)
-    assert s["binding"]["subject"] == (28, 28) and s["binding"]["metric"] == (45, 51)
+    assert rep.missed == ("c1", "c18", "c24", "c27", "c29", "c30") and rep.merged == ()
+    assert s["binding"]["subject"] == (28, 28) and s["binding"]["metric"] == (47, 51)
     # Stage 5: {"agree": 47, "other": 4}; Stage 6 M3 abstains three more (docs/eval.md).
     assert s["verdicts"] == {"agree": 44, "false_accept": 0, "false_flag": 0, "other": 7}
-    assert rep.sweep_flagged == ("c1", "c18", "c24", "c29") and rep.sweep_silent == ()
+    assert rep.sweep_flagged == ("c1", "c18", "c24", "c27", "c29") and rep.sweep_silent == ()
 
 
 def test_iteration_1_recording_is_kept_only_as_numbers() -> None:

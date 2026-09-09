@@ -13,6 +13,8 @@ from __future__ import annotations
 
 import json
 import re
+import time
+from collections.abc import Callable
 from dataclasses import dataclass
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
@@ -122,13 +124,32 @@ class Extraction:
     model: str
 
 
-def _call(client: ExtractorClient, artifact: str) -> tuple[list[Any], str]:
-    """One call, one retry. At temperature 0 the retry is expected to help only with
-    transport errors and empty responses; a content-level failure (invalid JSON, not
-    an array) will usually repeat and ends in ExtractError by design."""
+# An upstream failure that is worth waiting out: 5xx, rate limits, transport. Matched on
+# the exception's text because the provider SDK raises several classes for these
+# (acceptance F-7: two consecutive runs died on a transient 503, which is correct
+# fail-closed behaviour and a brittle CI gate). A content failure is not in here on purpose.
+TRANSIENT = ("500", "502", "503", "504", "UNAVAILABLE", "INTERNAL", "429", "RESOURCE_EXHAUSTED",
+             "DEADLINE_EXCEEDED", "timeout", "Timeout", "connection")  # fmt: skip
+# Delays before attempts 2, 3 and 4 of a transient failure; four attempts, ~21 s of waiting.
+BACKOFF_S: tuple[float, ...] = (1.0, 4.0, 16.0)
+
+
+def _transient(error: str) -> bool:
+    return any(marker in error for marker in TRANSIENT)
+
+
+def _call(
+    client: ExtractorClient, artifact: str, sleep: Callable[[float], None] = time.sleep
+) -> tuple[list[Any], str]:
+    """One call, with retries. A transient upstream failure (5xx, rate limit, transport) is
+    retried with exponential backoff and reported as `upstream unavailable` if it never
+    clears. A content-level failure (invalid JSON, not an array) is retried once and then
+    raises: at temperature 0 it usually repeats, so waiting longer buys nothing."""
     raw = ""
     error = "no response"
-    for attempt in range(2):
+    upstream = False
+    attempt = 0
+    while True:
         try:
             raw = client.complete(PROMPT, artifact, WIRE_SCHEMA)
             data = json.loads(raw)
@@ -136,12 +157,22 @@ def _call(client: ExtractorClient, artifact: str) -> tuple[list[Any], str]:
             raise
         except Exception as e:  # provider/transport error or invalid JSON
             error = f"{type(e).__name__}: {e}"
-            if attempt == 0:
-                continue
+            upstream = _transient(error)
+        else:
+            if isinstance(data, list):
+                return data, raw
+            error = f"response is {type(data).__name__}, not an array"
+            upstream = False
+        budget = BACKOFF_S if upstream else BACKOFF_S[:1]
+        if attempt >= len(budget):
             break
-        if isinstance(data, list):
-            return data, raw
-        error = f"response is {type(data).__name__}, not an array"
+        if upstream:  # a content failure is retried immediately, as before
+            sleep(budget[attempt])
+        attempt += 1
+    if upstream:  # acceptance F-7: distinct from an unusable response, so CI can tell them apart
+        raise ExtractError(
+            f"upstream unavailable after {attempt + 1} attempts; last error: {error}", raw=raw
+        )
     raise ExtractError(f"extraction failed twice; last error: {error}", raw=raw)
 
 
@@ -203,10 +234,14 @@ def _value_not_a_difference(claim: Comparison | Growth) -> str | None:
 
 
 def extract_claims(
-    artifact: str, client: ExtractorClient, *, raw_dump: Path | None = None
+    artifact: str,
+    client: ExtractorClient,
+    *,
+    raw_dump: Path | None = None,
+    sleep: Callable[[float], None] = time.sleep,
 ) -> Extraction:
     try:
-        items, raw = _call(client, artifact)
+        items, raw = _call(client, artifact, sleep)
     except ExtractError as e:
         if raw_dump is not None and e.raw:
             raw_dump.parent.mkdir(parents=True, exist_ok=True)

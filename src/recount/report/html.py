@@ -35,9 +35,18 @@ class Segment:
 
 
 def segments(rec: RunRecord) -> list[Segment]:
-    """The artifact cut into plain text and highlighted intervals. Each claim's span is
-    located at its first occurrence; overlaps (which the extractor forbids) keep the
-    earlier claim; unextracted tokens come with their offsets."""
+    """The artifact cut into plain text and highlighted intervals.
+
+    Each claim's span is located at its first occurrence. Spans may nest — the extractor
+    forbids overlap between accepted claims, but a rejected-then-accepted pair or a
+    context-bound wording can still produce one, and the Olist example has a real case
+    (acceptance F-6): `c15` "to hit 1,447,714.17" sits inside `c14`'s span. Marks cannot nest in
+    HTML without a tree, so the innermost claim wins the region it covers and the outer
+    claim keeps the rest: both are painted, and the header count stays reconcilable with
+    what is on screen. Ties (a partial overlap of equal length) go to the earlier claim.
+    Unextracted tokens stay at the lowest priority: a number inside an accepted span is
+    listed in the drawer, not marked, exactly as before.
+    """
     marks: list[tuple[int, int, str, str | None]] = []
     for claim, v in zip(rec.claims, rec.verdicts, strict=True):
         i = rec.artifact.find(claim.span)
@@ -45,19 +54,35 @@ def segments(rec: RunRecord) -> list[Segment]:
             marks.append((i, i + len(claim.span), v.verdict, claim.id))
     for t in rec.extraction.unextracted_numeric:
         marks.append((t.start, t.end, "unextracted", None))
-    marks.sort()
+
+    # priority per mark: claims before tokens, then innermost (shortest), then earliest
+    order = {
+        m: (m[3] is None, m[1] - m[0], m[0], i) for i, m in enumerate(marks)
+    }  # (is_token, width, start, position)
+    edges = sorted({x for a, b, _, _ in marks for x in (a, b)} | {0, len(rec.artifact)})
     out: list[Segment] = []
-    pos = 0
-    for a, b, kind, cid in marks:
-        if a < pos:
+    for a, b in zip(edges, edges[1:], strict=False):
+        covering = [m for m in marks if m[0] <= a and b <= m[1]]
+        text = rec.artifact[a:b]
+        if not text:
             continue
-        if a > pos:
-            out.append(Segment(rec.artifact[pos:a], "text"))
-        out.append(Segment(rec.artifact[a:b], kind, cid))
-        pos = b
-    if pos < len(rec.artifact):
-        out.append(Segment(rec.artifact[pos:], "text"))
+        if not covering:
+            out.append(Segment(text, "text"))
+            continue
+        _, _, kind, cid = min(covering, key=lambda m: order[m])
+        if out and out[-1].kind == kind and out[-1].claim_id == cid:  # keep marks whole
+            out[-1] = Segment(out[-1].text + text, kind, cid)
+        else:
+            out.append(Segment(text, kind, cid))
     return out
+
+
+def unpainted(rec: RunRecord, segs: list[Segment]) -> list[str]:
+    """Claim ids with no mark on screen: a span not found verbatim, or one tiled over
+    entirely by nested claims. The header says so rather than reporting a count the
+    reader cannot find (acceptance F-6)."""
+    painted = {s.claim_id for s in segs}
+    return [c.id for c in rec.claims if c.id not in painted]
 
 
 _QUOTED = re.compile(r"'([^']*)'")
@@ -157,13 +182,15 @@ def _claim_view(claim: Claim, v: Verdict) -> dict[str, Any]:
 def render_html(rec: RunRecord, record: dict[str, Any]) -> str:
     claims = [_claim_view(c, v) for c, v in zip(rec.claims, rec.verdicts, strict=True)]
     fails = [c for c in claims if c["verdict"] == "FAIL"]
+    segs = segments(rec)
     template = _ENV.get_template("report.html.j2")
     return template.render(
         title=f"Recount · {record['artifact_path']}",
         record=record,
         counts=rec.counts,
         exit_code=rec.exit_code(),
-        segments=segments(rec),
+        segments=segs,
+        unpainted=unpainted(rec, segs),
         claims=claims,
         fails=fails,
         # raw JSON inside <script type="application/json">: only "</" must be neutralised,

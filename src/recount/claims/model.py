@@ -68,15 +68,16 @@ class Comparison(_ClaimBase):
 class Ranking(_ClaimBase):
     type: Literal["ranking"]
     # Which end of the ordering rank 1 counts from, as the sentence names it. Stage 8
-    # amendment (F-3): the end a superlative names is a property of the sentence, not of
-    # the metric, and one report can hold both ends of one metric ("peaking at 1,263.31
-    # seconds" and "a low ... in the fourth quarter"). Before this field the end came from
-    # `metrics.<m>.polarity`, which answers a different question ("which way is better"),
-    # so a truthful superlative on a lower_is_better metric FAILed. "highest"/"lowest" name
-    # the numeric end directly; "best"/"worst" are the quality wording ("peak fulfillment
-    # efficiency", "the worst delivery times") and resolve through polarity, exactly as
-    # Comparison splits higher/lower from better/worse. Null abstains (abstention G12):
-    # a claims file or recording predating the field is never read as "highest".
+    # amendment (acceptance F-3): the end a superlative names is a property of the
+    # sentence, not of the metric, and one report can hold both ends of one metric
+    # ("peaking at 1,263.31 seconds" and "a low ... in the fourth quarter"). Before this
+    # field the end came from `metrics.<m>.polarity`, which answers a different question
+    # ("which way is better"), so a truthful superlative on a lower_is_better metric
+    # FAILed. "highest"/"lowest" name the numeric end directly; "best"/"worst" are the
+    # quality wording ("peak fulfillment efficiency", "the worst delivery times") and
+    # resolve through polarity, exactly as Comparison splits higher/lower from
+    # better/worse. Null abstains (abstention G12): a claims file or recording predating
+    # the field is never read as "highest".
     rank_from: Literal["highest", "lowest", "best", "worst"] | None = None
     # Position counted from the `rank_from` end: rank 3 with "lowest" is the third smallest.
     rank: int = Field(ge=1)
@@ -88,10 +89,11 @@ class Ranking(_ClaimBase):
     # unnamed party ("took the lead"). Abstains unsupported_claim_type (abstention G10).
     displaced: str | None = None
     # The ranking universe as written. For a time-grain ranking it is a period ("of the
-    # year" -> "2017"), never inferred from a calendar (abstention G8). Stage 8 (F-4): on
-    # an entity ranking it carries the sentence's own restriction of the universe verbatim
-    # ("among top companies"), which is unquantified and therefore abstains (G11) instead
-    # of being silently dropped and ranked against every group in the data.
+    # year" -> "2017"), never inferred from a calendar (abstention G8). Stage 8
+    # (acceptance F-4): on an entity ranking it carries the sentence's own restriction of
+    # the universe verbatim ("among top companies"), which is unquantified and therefore
+    # abstains (G11) instead of being silently dropped and ranked against every group in
+    # the data.
     scope: str | None = None
 
 

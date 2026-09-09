@@ -157,7 +157,7 @@ def test_hostile_cell_values_are_only_ever_compared(tmp_path: Path) -> None:
     ranking = ClaimAdapter.validate_python(
         {"id": "r", "type": "ranking", "span": "Sao Paulo led all states in revenue",
          "confidence": "high", "metric": "revenue", "subject": "Sao Paulo", "period": "2017",
-         "rank": 1, "group_by": "state"}
+         "rank": 1, "rank_from": "best", "group_by": "state"}
     )  # fmt: skip
     v = verify_claim(ds, ranking, cfg)
     assert v.verdict == "PASS", v.detail

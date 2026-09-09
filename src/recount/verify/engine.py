@@ -73,7 +73,7 @@ FROM (SELECT CAST({key} AS VARCHAR) AS key, {value} AS value,
 WHERE key IS NOT NULL
 ORDER BY rank, key"""
 
-# The same ranking with a minimum-support universe (metrics.<m>.min_rows, F-4): groups
+# The same ranking with a minimum-support universe (metrics.<m>.min_rows, acceptance F-4): groups
 # below the threshold are still returned, with their row count and a NULL rank, so a
 # subject that fell out of the universe can be told apart from one the data never had
 # (policies.check_ranking, abstention N5). A second constant rather than a slot in

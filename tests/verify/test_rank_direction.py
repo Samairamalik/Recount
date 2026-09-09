@@ -1,5 +1,5 @@
-"""Rankings end to end on the Olist parquet: which end rank 1 counts from (F-3), and
-the minimum support a group needs to be in the universe at all (F-4).
+"""Rankings end to end on the Olist parquet: which end rank 1 counts from (acceptance F-3), and
+the minimum support a group needs to be in the universe at all (acceptance F-4).
 
 Both findings come from the v0.1.0 acceptance run on 6.8M rows of unseen Chicago taxi
 data (docs/design.md, "Acceptance testing on unseen data"). Olist reproduces both:
@@ -65,7 +65,7 @@ def test_g12_a_ranking_without_a_direction_abstains() -> None:
     assert v.sql == "" and v.row_counts == {}
 
 
-# ------------------------------------------------------------------ F-4, min_rows
+# ---------------------------------------------------- acceptance F-4, min_rows
 
 
 def _with_min_rows(n: int | None) -> SemanticConfig:

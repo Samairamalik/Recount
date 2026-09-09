@@ -102,9 +102,42 @@ def test_retries_once_on_invalid_json_then_succeeds() -> None:
     assert len(client.calls) == 2 and len(ex.claims) == 1
 
 
+_slept: list[float] = []
+
+
 def test_retries_once_on_transport_error_then_succeeds() -> None:
     client = Scripted(RuntimeError("503"), [_pv()])
-    assert len(extract_claims(ARTIFACT, client).claims) == 1
+    assert len(extract_claims(ARTIFACT, client, sleep=_slept.append).claims) == 1
+    assert _slept == [1.0]  # backed off once before the retry that worked
+    _slept.clear()
+
+
+def test_f7_a_transient_upstream_failure_backs_off_and_is_named_as_such() -> None:
+    """Acceptance F-7: two runs died on a transient 503. Failing closed is right; giving up
+    after one immediate retry made a CI gate brittle. Four attempts, exponential backoff,
+    and an error that says the upstream was unavailable rather than that extraction was
+    invalid — the two need different responses from whoever reads the log."""
+    client = Scripted(*[RuntimeError("503 UNAVAILABLE")] * 4)
+    slept: list[float] = []
+    with pytest.raises(ExtractError, match="upstream unavailable after 4 attempts"):
+        extract_claims(ARTIFACT, client, sleep=slept.append)
+    assert len(client.calls) == 4 and slept == [1.0, 4.0, 16.0]
+
+
+@pytest.mark.parametrize("error", ["429 RESOURCE_EXHAUSTED", "500 INTERNAL", "connection reset"])
+def test_transient_markers_are_retried_to_the_end(error: str) -> None:
+    client = Scripted(RuntimeError(error), RuntimeError(error), [_pv()])
+    assert len(extract_claims(ARTIFACT, client, sleep=lambda _: None).claims) == 1
+    assert len(client.calls) == 3
+
+
+def test_a_content_failure_is_not_backed_off() -> None:
+    """An unusable response at temperature 0 usually repeats: one immediate retry, then the
+    same "failed twice" as before. Waiting longer buys nothing and stalls CI."""
+    slept: list[float] = []
+    with pytest.raises(ExtractError, match="failed twice"):
+        extract_claims(ARTIFACT, Scripted("garbage 1", "garbage 2"), sleep=slept.append)
+    assert slept == []
 
 
 def test_invalid_twice_raises_and_dumps_raw(tmp_path: Path) -> None:

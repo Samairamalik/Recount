@@ -22,6 +22,7 @@ from pydantic import ValidationError
 from rich.console import Console
 from rich.table import Table
 
+from recount import __version__
 from recount.bench.corrupt import SEEDS, generate, write_suite
 from recount.bench.runner import (
     BenchError,
@@ -47,8 +48,19 @@ app = typer.Typer(no_args_is_help=True, add_completion=False)
 console = Console()
 
 
+def _version(show: bool) -> None:
+    if show:
+        console.print(f"recount {__version__}")
+        raise typer.Exit()
+
+
 @app.callback()
-def main() -> None:
+def main(
+    version: Annotated[
+        bool,
+        typer.Option("--version", callback=_version, is_eager=True, help="Print the version."),
+    ] = False,
+) -> None:
     """Recount: deterministic verification of numeric claims in LLM-generated reports."""
 
 

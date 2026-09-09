@@ -1,0 +1,105 @@
+# Chicago Taxi Trips 2025 — what a report's words mean in chicago_taxi_2025.parquet.
+# Edited from `recount init` output during the v0.1.0 acceptance run (docs/design.md §9),
+# then updated for v0.2.0 where the run had to work around a defect (see avg_trip_seconds
+# and min_rows below). Source: City of Chicago Data Portal (ajtu-isnz); see README.md here.
+# The dataset is not committed: rebuild it with rebuild.sh.
+dataset: chicago_taxi_2025.parquet
+time_column: trip_start
+tolerance_rule: half_ulp
+
+entities:
+  vendor:
+    column: company
+    aliases:
+      Flash Cab: Flash Cab
+      Taxicab Insurance Agency: Taxicab Insurance Agency Llc
+      Sun Taxi: Sun Taxi
+      City Service: City Service
+      Taxi Affiliation Services: Taxi Affiliation Services
+      Transit Administrative Center: Transit Administrative Center Inc
+      Chicago Independents: Chicago Independents
+      5 Star Taxi: 5 Star Taxi
+      Blue Ribbon Taxi Association: Blue Ribbon Taxi Association
+      Globe Taxi: Globe Taxi
+      Yellow Cab Association: Tac - Yellow Cab Association
+      Medallion Leasing: Medallion Leasin
+  payment method:
+    column: payment_type
+    aliases:
+      Credit Card: Credit Card
+      Credit Card payments: Credit Card
+      Mobile: Mobile
+      Mobile payments: Mobile
+      Cash: Cash
+      Prcard: Prcard
+      No Charge: No Charge
+      Dispute: Dispute
+      Prepaid: Prepaid
+      Unknown: Unknown
+
+metrics:
+  trips:
+    agg: count
+    aliases: [trips, trip volume, total trip volume, total trips, trip count, total trip count,
+              monthly total trip count, ride volume, ride activity, taxi trips, rides, volume]
+    polarity: higher_is_better
+  revenue:
+    agg: sum
+    column: trip_total          # trip_total = fare + tips + tolls + extras
+    aliases: [revenue, total revenue, gross revenue, total trip revenue, trip revenue]
+    round: 2                    # SUM over DOUBLE varies with row order
+    polarity: higher_is_better
+  fare_revenue:
+    agg: sum
+    column: fare                # the metered fare only, excluding tips/tolls/extras
+    aliases: [fare revenue, total fares, total fare revenue]
+    round: 2
+    polarity: higher_is_better
+  tips:
+    agg: sum
+    column: tips
+    aliases: [tips, total tips, total driver tips, driver tips, tip revenue, total tip revenue]
+    round: 2
+    polarity: higher_is_better
+  avg_trip_value:
+    agg: avg
+    column: trip_total
+    aliases: [average trip value, average trip total, average revenue per trip, average total per trip]
+    polarity: higher_is_better
+    # 41 companies include a long tail: Blue Ribbon Taxi Association Inc. has ONE trip and
+    # an average of $132.25, which outranks every operator that carries a business. A
+    # ranking universe needs a floor; a subject below it abstains, never FAILs (acceptance F-4).
+    min_rows: 1000
+  avg_fare:
+    agg: avg
+    column: fare
+    aliases: [average fare, average fare per trip, average metered fare]
+    polarity: higher_is_better
+    min_rows: 1000
+  avg_tip:
+    agg: avg
+    column: tips
+    aliases: [average tip, average tip per trip]
+    polarity: higher_is_better
+    min_rows: 1000
+  avg_trip_miles:
+    agg: avg
+    column: trip_miles
+    aliases: [average trip distance, average trip miles, average distance, average miles per trip]
+    polarity: higher_is_better
+    min_rows: 1000
+  avg_trip_seconds:
+    agg: avg
+    column: trip_seconds
+    aliases: [average trip duration, average trip time, average trip seconds, average duration]
+    # The natural reading, and correct since v0.2.0. Under v0.1.0 this line had to say
+    # higher_is_better — a lie about the business — because polarity also decided which end
+    # rank 1 counted from, so "peaking at ... 1,263.31 seconds" FAILed (acceptance F-3). The claim now
+    # carries that direction in `rank_from`, and polarity answers only its own question.
+    polarity: lower_is_better
+    min_rows: 1000
+  trip_share_pct:
+    agg: share
+    aliases: [share of trips, share of total trips, share of all trips, percentage of trips,
+              trip share, market share]
+    polarity: higher_is_better

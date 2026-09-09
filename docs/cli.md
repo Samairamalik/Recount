@@ -1,7 +1,14 @@
 # Recount CLI
 
 Three commands: `recount init`, `recount verify`, `recount bench`. Everything is a YAML
-file plus flags; nothing is persisted between runs.
+file plus flags; nothing is persisted between runs. `recount --version` prints the
+installed version.
+
+**The API key.** Only live extraction needs one; the quickstart, the test suite, CI and the
+benchmark replay do not. `GEMINI_API_KEY` is read from the environment, and if it is not
+set there, from a `GEMINI_API_KEY=...` line in a `.env` file in the working directory
+(`.env.example` is the template; `.gitignore` covers `.env`). Nothing else is read from
+`.env`, and the key is never written to any output.
 
 ## Quickstart (the bundled example, no API key)
 
@@ -34,7 +41,13 @@ Exit 2 cases, each one sentence plus a link here:
   line of the offending key cited).
 - **extraction** invalid twice (the raw output is saved next to the artifact as
   `<artifact>.raw.txt`), no API key, or no recording for this artifact under `--recordings`.
-  A missing recording is exit 2, never a silent pass.
+  A missing recording is exit 2, never a silent pass. An upstream failure is reported
+  separately as *upstream unavailable*, after the retries below, so a 503 is not confused
+  with a model that returned something unusable.
+- **upstream unavailable**: the provider returned 5xx / 429 / a transport error on every
+  attempt. Live extraction retries a transient failure with exponential backoff (four
+  attempts, ~1 s, 4 s, 16 s) before giving up; a content-level failure (invalid JSON, not
+  an array) is retried once, since at temperature 0 it usually repeats.
 - **engine**: a claim crashed verification. Every other verdict is still emitted; the
   crashed claim shows `policy: error`.
 
@@ -61,6 +74,11 @@ recount verify REPORT --data DATA --config CONFIG
 - `--md` writes the same table as Markdown (the Action puts it in the job summary).
 - `--annotations` prints GitHub workflow commands: `::error` per FAIL, `::notice` per
   UNVERIFIABLE, `::warning` per unextracted numeric under `--strict`, each with the line.
+- `--model NAME` picks the live extractor model. The default is **`gemini-3.6-flash`**
+  (`recount.extract.client.MODEL`). The benchmark in docs/benchmark.md ran on
+  `gemini-3.1-flash-lite`, which the free tier allows 15 RPM / 500 RPD against the
+  default's 5 RPM / 20 RPD; the two extract differently on the same report, so the
+  benchmark's numbers belong to that model.
 - Offline modes: `--claims` takes pre-extracted claims (a JSON array of Claim objects) and
   runs the deterministic pipeline with no network at all; the file goes through the same
   validation and post-checks as a live response, so a span that is not verbatim in the
@@ -79,7 +97,19 @@ rank counts from: the claim carries that (`rank_from`). `min_rows` is the rows a
 needs to be in a ranking universe at all; unset means every group ranks, and a subject
 below it abstains `no_data` rather than FAILing. Recount verifies against these
 definitions and nothing else: a word not listed is an UNVERIFIABLE `schema_gap` with the
-key that would fix it, never a guess (docs/abstention.md). `examples/olist/metrics.yml`
+key that would fix it, never a guess (docs/abstention.md).
+
+**How a name or alias is matched.** In full, after normalisation — NFKD, accents dropped,
+case folded, internal whitespace collapsed — and never as a substring. `norm(the claim's
+metric)` must *equal* `norm(a name or alias)`, so the alias `revenue` does not match
+"total revenue", and `trip volume` does not match "total trip volume": each wording a
+report actually uses needs its own alias line. Business prose prefixes almost everything
+("total", "overall", "monthly", "average"), and listing those prefixed forms is the
+single cheapest thing you can do to a config. (Whole-word matching is a different check:
+the echo gate M3 asks whether the *span* contains the bound metric's wording as whole
+words. It can only refuse a binding, never create one.) Aliases must resolve uniquely:
+one wording naming two metrics is a config error, which is why matching is not widened
+to substrings. `examples/olist/metrics.yml`
 is a complete one, including two commented-out opt-in aliases and why they are off.
 
 ### dataset

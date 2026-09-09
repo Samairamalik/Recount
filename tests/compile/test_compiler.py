@@ -427,7 +427,7 @@ def test_m3_span_must_echo_the_bound_metric() -> None:
     abstains(
         pv("order volume", 8984, span="to reach 8,984 returns", period="2017-Q2"),
         AbstainReason.SCHEMA_GAP,
-        "add it under metrics.orders.aliases",
+        "add that wording under metrics.orders.aliases",
     )
     # no wording at all is refused the same way: the binding came from outside the span
     abstains(pv("revenue", 1447714.17, span="to hit 1,447,714.17"), AbstainReason.SCHEMA_GAP,
@@ -437,6 +437,18 @@ def test_m3_span_must_echo_the_bound_metric() -> None:
         assert isinstance(compile_claim(pv("revenue", 1.0, span=span), CFG), AggregatePlan), span
     # a substring is not a word: "orders" does not echo "borders"
     abstains(pv("orders", 5, span="5 borders"), AbstainReason.SCHEMA_GAP, "metric_echo_failed")
+
+
+def test_schema_gap_details_name_the_rule_and_the_line_to_paste() -> None:
+    """F-1: full-string matching surprised a new user into 25 of 36 first-run abstentions.
+    The message that reports the gap now states the rule and prints the YAML to paste."""
+    out = compile_claim(pv(metric="total driver tips", span="total driver tips of 1.0"), CFG)
+    assert isinstance(out, Abstain)
+    assert "matched in full after normalisation, never as a substring" in out.detail
+    assert 'aliases: [..., "total driver tips"]' in out.detail
+    entity = compile_claim(pv(subject="Ceara"), CFG)
+    assert isinstance(entity, Abstain)
+    assert '"Ceara": <the value stored in that column>' in entity.detail
 
 
 def test_m3_share_span_may_name_the_row_count_metric() -> None:

@@ -21,6 +21,12 @@ from google.genai import types
 
 MODEL = "gemini-3.6-flash"  # the spike's working model; pinned
 ENV_KEY = "GEMINI_API_KEY"
+# Per-request deadline. Without one the SDK waits forever: this session's own re-record
+# hung on a single call for 59 minutes with no error, which in CI is worse than the 503 it
+# replaced (acceptance F-7). A timed-out call raises, and "timeout" is one of the
+# extractor's TRANSIENT markers, so the existing backoff retries it. Extraction of a
+# 40-claim report takes ~20 s on the benchmark model, so two minutes is ample.
+TIMEOUT_MS = 120_000
 
 
 class ExtractError(Exception):
@@ -54,9 +60,14 @@ def resolve_api_key(env: Mapping[str, str] = os.environ, dotenv: Path = Path(".e
 
 
 class GeminiClient:
-    def __init__(self, api_key: str | None = None, model: str = MODEL) -> None:
+    def __init__(
+        self, api_key: str | None = None, model: str = MODEL, timeout_ms: int = TIMEOUT_MS
+    ) -> None:
         self.model = model
-        self._client = genai.Client(api_key=api_key or resolve_api_key())
+        self._client = genai.Client(
+            api_key=api_key or resolve_api_key(),
+            http_options=types.HttpOptions(timeout=timeout_ms),
+        )
 
     def complete(self, prompt: str, artifact: str, schema: dict[str, Any]) -> str:
         response = self._client.models.generate_content(

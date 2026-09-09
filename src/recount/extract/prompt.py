@@ -4,7 +4,7 @@ The examples come from an invented widget-sales report, never from the Olist tex
 so the extraction eval is not contaminated by its own answers. The prompt carries the
 schema's contracts in words: unsigned magnitudes with the sign in `direction`, the
 period grammar of docs/abstention.md §P, `rank_from` for which end a rank counts from
-(Stage 8, F-3), `scope` for a stated ranking universe, `displaced` for overtaking, and
+(Stage 8, acceptance F-3), `scope` for a stated ranking universe, `displaced` for overtaking, and
 "extract vaguely with confidence low, never drop". The dataset and the config never
 appear here (CLAUDE.md §0).
 """

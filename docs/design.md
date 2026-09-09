@@ -205,9 +205,9 @@ Final numbers, default config, `gemini-3.1-flash-lite` for extractor and judge:
 
 | | Recount | judge with the answer key |
 |---|---|---|
-| detection, exact-match classes (n = 100) | 79 % | 100 % |
+| detection, exact-match classes (n = 100) | 76 % | 100 % |
 | false accepts, exact-match classes | 0 | 0 |
-| fabricated metric caught by abstention (n = 20) | 19 | n/a (no abstain path) |
+| fabricated metric caught by abstention (n = 20) | 18 | n/a (no abstain path) |
 | coverage (a claim on the corrupted span) | 98 % | n/a |
 | abstention rate | 22 % | 0 % |
 | clean report (51 claims) | 40 PASS / 0 FAIL / 11 UNVERIFIABLE | judged unfaithful |
@@ -216,7 +216,7 @@ Final numbers, default config, `gemini-3.1-flash-lite` for extractor and judge:
 | verdict comes with executed SQL + row counts | yes | no |
 
 The judge's 100 % is a prior, not a detector: it also calls the clean report unfaithful.
-Recount's 79 % is lower and means something, because it comes with a computed value, an
+Recount's 76 % is lower and means something, because it comes with a computed value, an
 executed query, and zero false flags on the same clean report.
 
 ## 5. Five findings, in order
@@ -318,3 +318,60 @@ PASS / FAIL / UNVERIFIABLE with the executed SQL, as a library, a CLI, a CI gate
 promptfoo assertion, evaluated on a reproducible seeded-corruption benchmark that reports
 coverage and abstention next to detection. That sentence is hedged on purpose, and the
 table above is where a reader should start checking it.
+
+## 9. Acceptance testing on unseen data
+
+v0.1.0 was tested by a stranger path: a fresh clone of the public repository, guided only
+by the README and `docs/`, then pointed at a dataset this project had never seen —
+[Chicago Taxi Trips](https://data.cityofchicago.org/resource/ajtu-isnz), calendar year
+2025, **6,825,838 trips** in a 66 MB Parquet built from twelve monthly Socrata pulls
+(`examples/chicago/` keeps the report, the config, the extracted claims and a rebuild
+script). The dataset was
+chosen for shape, not for kindness: a real timestamp covering the year, two genuine text
+dimensions (`company`, 41 distinct; `payment_type`, 8), several numeric measures, NULLs in
+the measure column, and a long tail of micro-operators — none of which the six curated
+Olist states exercise.
+
+**What held.** Every number Recount *computed* matched independently written DuckDB queries
+to the digit, on all seven checked claims: 2025 revenue 184,317,971.69; Q2-over-Q1 growth
+36.060682%; Credit Card trip share 35.420808%; Credit Card average tip 6.0654522770 with 56
+NULLs skipped; average trip distance 6.4414963883; Taxicab Insurance share 12.275885%;
+quarterly average durations peaking in Q2 and lowest in Q4. NULL handling was visible rather
+than silent (`n_rows 6,825,838 / n_used 6,814,201` on a measure with 11,637 NULLs).
+Verification cost 1–3 ms per claim at 6.8M rows; the ~100 s per run was the extraction call.
+Three deliberate corruptions — a transposed figure, a flipped direction, a changed
+ordinal — were each caught with the right verdict, the right policy and the SQL that
+produced it. The keyless paths held too: the test suite, the README quickstart byte for
+byte, the benchmark replay, and exit codes 0 / 1 / 2 on the paths the docs describe.
+
+**What broke, and why it broke.** The acceptance report numbers its findings F-1…F-14;
+this section keeps those numbers and writes them "acceptance F-n", because §5 above already
+uses F-1…F-5 for the benchmark's own findings. Three design defects, all in ranking, all producing
+*confident FAILs on true sentences* — the failure mode that costs a CI gate its credibility
+fastest after a false PASS. Each is a design defect rather than a bug: the code did what it
+was designed to do.
+
+| # | defect | root cause | fix |
+|---|---|---|---|
+| acceptance F-3 | A truthful superlative FAILed. "Peaking at an average trip duration … in the second quarter" and "a low average trip duration … in the fourth quarter" were both FAILed, and flipping one config line (`polarity`) turned both into PASS. | **One field answering two questions.** `polarity` says which direction of a metric is *better*; rankings reused it for which end rank 1 counts *from*. For revenue the two coincide; for duration, cost, latency and defect rate they are opposites. Worse, a single per-metric value cannot serve one report that names both ends of one metric — and the config that made the FAILs go away was the one that misstated what is good for the business. Olist never exposed it because all five of its ranking labels are quality wording, where the two questions do coincide. | `Ranking.rank_from` on the claim (abstention G9/G12, benchmark changelog 8): the sentence decides, `polarity` keeps its one job, and null is never read as "highest". |
+| acceptance F-4 | "Among top providers, 5 Star Taxi recorded the highest average trip value" FAILed: 5 Star (364,463 trips) ranked 11th behind a company with **one trip**. | **A ranking universe with no floor and no way to restrict it.** Averages over tiny groups are noise that outranks everything, and real entity dimensions have long tails; six curated states hid this completely. The report's own hedge — "among top companies", sitting verbatim in the span — had nowhere to go, because the prompt told the extractor `scope` was for time-grain rankings only, so the restriction was silently dropped rather than refused. | `metrics.<m>.min_rows` for the floor (engine row N5: a subject below it abstains, never FAILs) and `scope` carried on entity rankings so G11 can refuse an unquantified restriction honestly (changelog 9). |
+| acceptance F-6 | The HTML dropped a claim: `c15`'s span nests inside `c14`'s in the shipped example, so 51 of 52 verdicts were painted while the header still counted 52. | **A flat segmentation model for a structure that is not flat.** Marks were laid down in one pass and any span starting inside an open one was skipped; the drawer still listed it, so the count and the page disagreed and only `--json` showed the truth. | Innermost-wins segmentation, so a nested claim keeps its own region and the outer keeps the rest; anything still unpainted is named in the header (changelog 12). |
+
+Two further findings are properties rather than defects, and are now stated where a reader
+meets them. **Acceptance F-5:** extraction non-determinism can change a *verdict*, not only coverage —
+the same true sentence extracted as `rank=12` in one live run and `rank=1` in another,
+PASS and FAIL, same model at temperature 0. That was F-3 seen from the extractor's side (no
+field said which end a rank counted from), so `rank_from` narrows it, but it does not close
+it, and the README now says so next to the "0 false flags" number. **Acceptance F-1:** the docs
+promised whole-word alias matching where the compiler requires full-string equality after
+normalisation — the single most misleading line in the docs, and 25 of 36 first-run
+abstentions. The rule is the right one (substring matching is the compiler guessing what
+words mean, which M3 exists to refuse), so the fix was the docs plus a `schema_gap` message
+that prints the alias line to paste (changelog 11).
+
+**What this exercise is worth.** One dataset, one report, one tester, one day. It found
+nothing wrong with the arithmetic and three things wrong with the design, all in the one
+claim type whose vocabulary the Olist fixtures happened to agree with. That ratio is the
+argument for testing on data the project has never seen: the benchmark measures what the
+design already anticipates, and unseen data is what finds the questions the design never
+asked.

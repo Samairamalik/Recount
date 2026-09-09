@@ -63,8 +63,8 @@ def compile_claim(claim: Claim, cfg: SemanticConfig) -> ComputePlan | Abstain:
         return Abstain(
             _SCHEMA_GAP,
             f"metric_echo_failed: nothing in the span resolves to '{name}' (bound from metric"
-            f" '{claim.metric}'); if the span's wording means '{name}', add it under"
-            f" metrics.{name}.aliases",
+            f" '{claim.metric}'); if the span's wording means '{name}', add that wording"
+            f" under metrics.{name}.aliases:\n    aliases: [..., <the span's wording>]",
         )
     return plan
 
@@ -75,7 +75,10 @@ def _compile(claim: Claim, cfg: SemanticConfig) -> ComputePlan | Abstain:
     if name is None:
         return Abstain(
             _SCHEMA_GAP,
-            f"unknown metric '{claim.metric}'; config metrics: {', '.join(cfg.metrics)}",
+            f"unknown metric '{claim.metric}'; names and aliases are matched in full after"
+            f" normalisation, never as a substring, so a prefixed wording needs its own"
+            f" alias. Config metrics: {', '.join(cfg.metrics)}. To fix, add under the one"
+            f' this means:\n    aliases: [..., "{claim.metric}"]',
         )
     metric = cfg.metrics[name]
     if isinstance(claim, Ranking):
@@ -197,8 +200,9 @@ def _ranking(
         if resolved is None or resolved[0] != dim:  # G5
             return Abstain(
                 _SCHEMA_GAP,
-                f"'{claim.subject}' is not a '{claim.group_by}' alias;"
-                f" add it under entities.{dim}.aliases",
+                f"'{claim.subject}' is not a '{claim.group_by}' alias; add it under"
+                f' entities.{dim}.aliases:\n    aliases:\n      "{claim.subject}":'
+                " <the value stored in that column>",
             )
         subject_key = resolved[1]
     if claim.rank_from is None:  # G12 — the sentence's end, never guessed from the config
@@ -306,7 +310,10 @@ def _entity(subject: str | None, cfg: SemanticConfig) -> EntityFilter | None | A
     )  # E2 — alias keys and stored values, config only
     if resolved is None:  # E4
         return Abstain(
-            _SCHEMA_GAP, f"unknown entity '{subject}'; add it under entities.<dim>.aliases"
+            _SCHEMA_GAP,
+            f"unknown entity '{subject}'; aliases are matched in full after normalisation."
+            f" To fix, add under the dimension it belongs to:\n    aliases:\n"
+            f'      "{subject}": <the value stored in that column>',
         )
     dim, value = resolved
     return EntityFilter(column=cfg.entities[dim].column, value=value)

@@ -191,3 +191,47 @@ more of the sentence, loses three (changelog 7 returned the two "days for delive
 spans on both). No false accept and no false flag on either model,
 before or after; what M3 buys (docs/benchmark.md changelog 5) is paid for in coverage,
 and this table is where the price is written down.
+
+## Stage 8 addendum: the gate re-run because the prompt changed
+
+`Ranking` gained `rank_from` (docs/benchmark.md changelog 8) and the prompt gained the
+paragraph that teaches it, plus the sentence that carries an entity ranking's stated
+universe into `scope` (changelog 9). A prompt or schema edit invalidates every recording by
+construction, so both fixtures were re-recorded live on 2026-09-08 and the owner's honesty
+gate — recall ≥ 0.85 with precision 1.0 on the benchmark's model — was re-applied before
+the 96 benchmark recordings were spent.
+
+| | 3.6-flash, changelog 7 | 3.6-flash, Stage 8 | flash-lite, changelog 7 | flash-lite, Stage 8 |
+|---|---|---|---|---|
+| claims accepted / rejected | 63 / 0 | 56 / 0 | 51 / 4 | 51 / 4 |
+| matched · merged · missed · spurious | 55 · 0 · 2 · 8 | 55 · 0 · 2 · 1 | 51 · 1 · 5 · 0 | 51 · 0 · 6 · 0 |
+| **recall** | 0.9649 | **0.9649** | 0.8947 | **0.8947** |
+| **precision** | 0.873 | **0.9821** | 1.0 | **1.0** |
+| span validity | 1.0 | 1.0 | 1.0 | 1.0 |
+| subject binding | 28/28 | 28/28 | 28/28 | 28/28 |
+| metric binding | 55/55 | 52/55 | 45/51 | 47/51 |
+| rank binding | 5/5 | 5/5 | 5/5 | 5/5 |
+| verdict agreement (agree / false accept / false flag / other) | 46 / 0 / 0 / 9 | 46 / 0 / 0 / 9 | 44 / 0 / 0 / 7 | 44 / 0 / 0 / 7 |
+| end-to-end on `report_clean.md` (PASS / UNV / FAIL) | 43 / 18 / 0 | 42 / 13 / 0 | 40 / 11 / 0 | **40 / 11 / 0** |
+
+**Gate: passed.** flash-lite recall 0.8947 ≥ 0.85, precision 1.0, unchanged to four decimal
+places. The default model's recall is likewise unchanged; its precision rose from 0.873 to
+0.9821 because it returned seven fewer unlabelled-but-true claims on this run — extraction
+is not a function of the text at temperature 0 (F-4), and a re-record is the clearest
+demonstration of that: same model, same prompt-plus-report, different day, different claim
+count. That is also why the re-record was done *after* the verifier change had been measured
+on the oracle path with extraction held fixed.
+
+The lite model's clean-report end-to-end is unchanged to the count (40 / 11 / 0 on 51
+accepted claims, 4 rejected), which is the number the README quickstart prints; the default
+model's moved from 43 / 18 / 0 on 61 claims to 42 / 13 / 0 on 55, because it returned fewer
+claims this time. Neither is a verifier change.
+
+**`rank_from` in the wild.** Both models filled it on every ranking, and read the sentence
+rather than the config: `best` for quality wording ("took the lead", "peak fulfillment
+efficiency", "secured the second position"), `lowest` for "a year-low of 11.41 days",
+`highest` for "to peak at 17,280 orders". Rank binding against the labels stayed 5/5. The
+`invalid_claim` rejections on the lite run are the pre-existing wire-schema union on
+`direction` (a growth word typed onto a comparison), not the new field; both of those spans
+are levels that changelog 3's post-check rejects anyway.
+

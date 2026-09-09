@@ -72,26 +72,50 @@ When your changes create orphans:
 The test: every changed line should trace directly to the user's request.
 
 ## STATUS (update at the end of every session)
-Current stage: v0.1.0 tagged (moving tag v0.1), repo PUBLIC (2026-09-08). Stage 7 closed with the mock interview.
-Done (Stage 7, 2026-09-08): tests/security/test_hostile_inputs.py (T3/T4/T7: 40 parametrised hostile-name cases
-through compile→verify, hostile column names as quoted identifiers, hostile cells as group keys, a `!!python` config
-tag refused as invalid YAML, dataset and artifact caps as one-line exit 2); tests/adversarial/test_injection.py (T1:
-10 phrasings × 3 positions with extraction held fixed → verdicts identical, a phrasing inside a span rejects only
-that claim, hostile wire keys are foreign fields; T2: Hypothesis instruction-in-a-cell invariance);
-tests/test_determinism.py (in-process, two-process byte-identical JSON/HTML/Markdown, Hypothesis row-order
-invariance). New cap: `pipeline.MAX_ARTIFACT_BYTES` = 1 MiB (`ArtifactError` → exit 2). docs/design.md (walls with
-test names, abstention, benchmark method, F-1→F-5, threat table T1–T10, honesty + prior art). README public-ready
-with docs/demo.gif (frames rendered from real runs: CLI on the corrupted report, the PR's Checks tab on
-GitHub with verify-reports ✗, the HTML drawer). LICENSE (Apache-2.0) added
-(it was referenced but missing). Version 0.1.0; benchmark replayed keylessly, only the version line moved;
-bench/results/v0.1.0.json committed. The three private planning docs removed from the tree and every reference
-scrubbed (spec §, FR-, NFR- ids; threat ids T1–T10 now defined in docs/design.md). pip-audit clean; no key, .env or
-raw data tracked, history scanned.
-Next: the post-v0.1 visibility write-up is the owner's; code-wise the V2 items are P12 (data-coverage abstention),
-COUNT DISTINCT metrics and rank-change verification. Pre-flip tightenings (owner's ruling, 2026-09-08): pip-audit is enforcing in ci.yml; .github/CODEOWNERS covers
-.github/, action.yml and Dockerfile (T9); verify-reports is already a required check on main.
+Current stage: Stage 8 (v0.2.0) — the v0.1.0 acceptance run on unseen data, ruled and fixed.
+Done (Stage 8, 2026-09-08), in the owner's order:
+1. **F-3 rank direction** — `Ranking.rank_from` (highest/lowest/best/worst) carries the end the sentence
+   names; `polarity` keeps only "which way is better". Abstention G12 (null → ambiguous), G9 narrowed to
+   best/worst, `RankPlan.polarity` → `order`. Fixture amendment F6 (all five ranking labels are `best`).
+2. **F-4 ranking support and the report's hedge** — `metrics.<m>.min_rows` (default None; `recount init`
+   writes an active 30 on avg metrics), a second ranking template that ranks only supported groups and
+   returns the rest with a NULL rank, engine row N5 (below-threshold subject abstains `no_data`, never
+   FAILs — trade-off argued in docs/design.md §3), G11 rewritten so an entity ranking's stated universe
+   is refused honestly, prompt carries it into `scope`.
+3. **F-1 alias matching** — docs fixed (full-string after normalisation, never a substring), not the code;
+   `schema_gap` details now print the YAML line to paste.
+4. **F-6 HTML spans** — innermost-wins segmentation so nested spans render; anything still unpainted is
+   named in the header, so the counts always reconcile with the page.
+5. **Docs sweep** — default model stated and reconciled with the benchmark's, `recount --version`, `.env`
+   documented, an Install-and-develop section (uv, Python ≥3.12, `uv run pytest`), and the honesty note
+   that extraction non-determinism can flip a verdict, not only coverage (F-5).
+6. **F-7 backoff** — transient 5xx/429/transport retried with exponential backoff (4 attempts, 1/4/16 s),
+   reported as `upstream unavailable`, distinct from an unusable response; content failures unchanged.
+Sequencing (owner's ruling): the keyless oracle before/after ran first with extraction held fixed — **no
+number moved**, suite hash unchanged — and only then was the live re-record started (the prompt and wire
+schema changed, which stales every recording by construction). The docs/eval.md honesty gate was re-run
+first and passed (flash-lite recall 0.8947 / precision 1.0, both unchanged; default model recall 0.9649,
+precision 0.873 -> 0.9821). Changelog entries 8-9 are committed.
+
+The re-record completed on 2026-09-09 (16 remaining calls; the provider had degraded the
+previous day and recovered). All 96 extraction recordings and the 3 eval fixtures are on the
+Stage 8 prompt and schema; the judge's 101 are untouched, so the head-to-head baseline is
+unchanged. Changelog entries 8-14 carry the before/after; table E in §7 is the v0.2.0 run.
+**v0.1.0 -> v0.2.0, and all of it is extraction:** exact-match detection 79/100 -> 76/100,
+detected-by-abstention 19 -> 18, unextracted 3 -> 7, **false accepts 0 -> 0, collateral
+0 -> 0**, abstained 19 -> 19, suite hash unchanged, clean report identical (51 claims, 40
+PASS / 0 FAIL / 11 UNVERIFIABLE, recall 0.8947, precision 1.0). Exactly 4 of 120 variants
+changed outcome and all four are the same claim, c27. Items 3-6 were A/B'd on the identical
+recordings and are byte-identical. The alias-on row fell 5/15 -> 0/15 because this
+extraction words the ranking metric `commercial performance` everywhere; no alias was added
+after seeing the table (I2 / T10).
+
+Also: docs/design.md §9 "Acceptance testing on unseen data"; `examples/chicago/` as a reference (not
+runnable: the 66 MB dataset is rebuilt by its script, and a sample would verify nothing).
+Next: unchanged V2 items — P12 data-coverage abstention, COUNT DISTINCT metrics, rank-change verification
+(G10). F-2 (dimension aliases) and F-12/F-14 from the acceptance report are open and not scoped here.
 Known false-PASS path (documented, abstention P12): periods partly outside the data range compute over
 the rows present; V2 engine TODO queries min/max of time_column and abstains no_data. G7 (year rankings
-withheld as no_data) is the stopgap. COUNT DISTINCT metrics (c1) deferred; the sweep flags "27 states".
+withheld as no_data) is the stopgap; `min_rows` narrows one corner of it and replaces neither.
 Benchmark integrity: taxonomy frozen (test_corruption_taxonomy_is_frozen); every post-freeze change to
-verify/compile/extract is a numbered entry in docs/benchmark.md §6 with before/after numbers (seven so far).
+verify/compile/extract is a numbered entry in docs/benchmark.md §6 with before/after numbers.

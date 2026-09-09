@@ -46,6 +46,7 @@ footer { padding:12px 24px; color:var(--grey); font-size:12px; border-top:1px so
   <span class="count UNVERIFIABLE">{{ counts.UNVERIFIABLE }} UNVERIFIABLE</span>
   <span class="count grey">{{ counts.unextracted_numeric }} unextracted numeric</span>
   {% if counts.rejected %}<span class="count grey">{{ counts.rejected }} rejected</span>{% endif %}
+  {% if unpainted %}<span class="count grey" title="their spans are covered by another claim's mark, or were not found verbatim; open them from the list below">{{ unpainted|length }} not marked below: {{ unpainted|join(", ") }}</span>{% endif %}
   <span>exit code <b>{{ exit_code }}</b>{% if record.strict %} (strict){% endif %}</span>
   <div class="meta">recount {{ record.recount_version }} · extractor {{ record.extractor_model }} · artifact {{ record.artifact_path }} {{ record.artifact_sha256[:12] }} · dataset {{ record.dataset_path }} {{ record.dataset_sha256[:12] }} · config {{ record.config_path }} {{ record.config_sha256[:12] }}</div>
 </header>

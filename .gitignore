@@ -9,6 +9,7 @@ __pycache__/
 dist/
 *.parquet
 !examples/olist/*.parquet
+examples/chicago/chi_2025_*.csv   # rebuild.sh intermediates
 spike/data/
 out.html
 verdicts.json
